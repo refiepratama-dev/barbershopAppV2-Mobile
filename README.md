@@ -1,36 +1,263 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Barbershop POS Mobile
 
-## Getting Started
+Aplikasi **Barbershop POS berbasis mobile** yang dikembangkan untuk membantu pengelolaan aktivitas barbershop melalui perangkat Android.
 
-First, run the development server:
+Aplikasi ini menggunakan teknologi web modern yang dikemas menjadi aplikasi mobile menggunakan **Capacitor**, sehingga dapat mengakses sistem melalui perangkat Android dengan pengalaman penggunaan yang lebih praktis.
+
+## ✨ Fitur
+
+* Login pengguna
+* Autentikasi dan pengamanan halaman
+* Dashboard aplikasi
+* Pencatatan transaksi
+* Pengelolaan laporan
+* Informasi profil pengguna
+* Navigasi mobile
+* Pengelolaan layanan barbershop
+* Informasi barber
+* Pencatatan aktivitas operasional
+* Integrasi dengan backend dan database
+
+## 👤 Role Pengguna
+
+Aplikasi mendukung beberapa role pengguna untuk menyesuaikan akses berdasarkan kebutuhan operasional:
+
+| Role     | Akses                                                      |
+| -------- | ---------------------------------------------------------- |
+| Owner    | Memantau operasional dan informasi bisnis                  |
+| Kasir    | Mengelola transaksi dan aktivitas kasir                    |
+| Barber   | Mengakses informasi yang berkaitan dengan aktivitas barber |
+| Admin IT | Mengelola kebutuhan sistem dan aplikasi                    |
+
+## 🛠️ Teknologi
+
+* **Next.js** — Web application framework
+* **TypeScript** — Programming language
+* **Capacitor** — Mobile application runtime
+* **Android** — Mobile platform
+* **Supabase** — Database dan backend services
+* **Tailwind CSS** — User interface styling
+* **Node.js** — Runtime environment
+* **Git & GitHub** — Version control
+
+## 📁 Struktur Project
+
+```text
+barbershopAppV2-Mobile/
+├── app/
+│   ├── login/
+│   ├── laporan/
+│   ├── profil/
+│   ├── transaksi/
+│   └── page.tsx
+├── components/
+├── lib/
+├── public/
+│   └── assets/
+├── android/
+├── capacitor.config.ts
+├── package.json
+├── next.config.ts
+├── tsconfig.json
+└── README.md
+```
+
+> Struktur project dapat berubah selama proses pengembangan.
+
+## 🚀 Instalasi
+
+Pastikan perangkat sudah memiliki:
+
+* Node.js
+* npm
+* Android Studio
+* Android SDK
+* Java Development Kit (JDK)
+* Git
+
+Clone repository:
+
+```bash
+git clone https://github.com/refiepratama-dev/barbershopAppV2-Mobile.git
+```
+
+Masuk ke folder:
+
+```bash
+cd barbershopAppV2-Mobile
+```
+
+Install dependency:
+
+```bash
+npm install
+```
+
+## ⚙️ Konfigurasi Environment
+
+Buat file:
+
+```text
+.env.local
+```
+
+Kemudian masukkan konfigurasi environment yang diperlukan.
+
+Contoh:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+> Jangan commit `.env.local` ke repository.
+
+## 💻 Menjalankan Development
+
+Jalankan development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aplikasi web dapat diakses melalui alamat yang ditampilkan oleh Next.js.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📱 Capacitor
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Project menggunakan Capacitor untuk mengintegrasikan aplikasi Next.js dengan platform Android.
 
-## Learn More
+Setelah melakukan perubahan pada aplikasi web, sinkronkan project dengan Android menggunakan:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx cap sync android
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Kemudian buka project Android:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx cap open android
+```
 
-## Deploy on Vercel
+Project Android dapat dijalankan melalui Android Studio menggunakan emulator atau perangkat Android yang terhubung.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔄 Workflow Pengembangan
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Workflow dasar pengembangan aplikasi:
+
+```text
+Next.js
+   ↓
+Development / Build
+   ↓
+Capacitor
+   ↓
+Android
+   ↓
+Android Studio
+   ↓
+APK / Android Application
+```
+
+Perubahan pada bagian web perlu disinkronkan kembali ke project Android menggunakan Capacitor sebelum dijalankan sebagai aplikasi Android.
+
+## 📦 Build Android
+
+Build aplikasi web terlebih dahulu menggunakan script build yang tersedia:
+
+```bash
+npm run build
+```
+
+Kemudian sinkronkan perubahan ke Android:
+
+```bash
+npx cap sync android
+```
+
+Buka project Android:
+
+```bash
+npx cap open android
+```
+
+Selanjutnya proses build APK dapat dilakukan melalui Android Studio sesuai konfigurasi project.
+
+## 📲 Instalasi APK
+
+APK hasil build dapat dipindahkan secara manual ke perangkat Android untuk proses instalasi.
+
+Aplikasi ini tidak bergantung pada distribusi melalui Google Play Store untuk penggunaan internal atau pengujian.
+
+> Untuk instalasi manual, perangkat Android mungkin perlu mengizinkan pemasangan aplikasi dari sumber yang tidak dikenal sesuai versi Android yang digunakan.
+
+## 🔐 Keamanan
+
+File konfigurasi lokal tidak disimpan dalam repository.
+
+Contoh file/folder yang diabaikan:
+
+```text
+node_modules/
+.next/
+out/
+dist/
+.env*
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+```
+
+File seperti `.env.local` harus tetap berada di lingkungan lokal dan tidak boleh dimasukkan ke repository.
+
+## 🎨 Asset
+
+Asset layanan aplikasi disimpan pada:
+
+```text
+public/assets/
+```
+
+Contoh layanan:
+
+```text
+public/assets/layanan/
+├── lyn-anak.png
+├── lyn-bayi.png
+├── lyn-dewasa.png
+└── lyn-semir.png
+```
+
+Asset digunakan untuk mendukung tampilan informasi layanan pada aplikasi.
+
+## 🔗 Integrasi Backend
+
+Aplikasi menggunakan **Supabase** sebagai backend dan database.
+
+Integrasi aplikasi dilakukan melalui konfigurasi environment dan library yang terdapat pada:
+
+```text
+lib/supabase.ts
+```
+
+Informasi kredensial dan konfigurasi environment tidak disimpan langsung dalam source code yang dipublikasikan.
+
+## 📌 Status
+
+**Development**
+
+Aplikasi masih dalam tahap pengembangan. Fitur, tampilan, struktur database, dan konfigurasi aplikasi dapat berubah mengikuti kebutuhan pengembangan.
+
+## 👨‍💻 Developer
+
+**Muhammad Refie Pratama**
+
+* GitHub: `refiepratama-dev`
+* Fokus: Software Development, UI/UX Design, Web & Mobile Development
+
+## 📄 License
+
+Project ini dibuat untuk kebutuhan pengembangan dan pembelajaran.
+
+Hak penggunaan, distribusi, dan pengembangan lebih lanjut mengikuti ketentuan yang ditetapkan oleh pemilik project.
