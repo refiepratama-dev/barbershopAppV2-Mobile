@@ -173,8 +173,18 @@ export default function BerandaPage() {
     dashboard.totalKomisi -
     dashboard.totalPengeluaran;
 
+    const totalD = dashboard.barberStats.reduce((a, b) => a + b.D, 0);
+    const totalA = dashboard.barberStats.reduce((a, b) => a + b.A, 0);
+    const totalB = dashboard.barberStats.reduce((a, b) => a + b.B, 0);
+    const totalC = dashboard.barberStats.reduce((a, b) => a + b.C, 0);
+    const totalS = dashboard.barberStats.reduce((a, b) => a + b.S, 0);
+    const totalAkumulasi = dashboard.barberStats.reduce(
+      (a, b) => a + b.total,
+      0
+    );
+
   return (
-    <div className="w-full font-sans pb-32">
+    <div className="w-full font-sans">
       {/* Top Profile Bar */}
       <div className="flex justify-between items-center mb-5">
         <div>
@@ -201,7 +211,7 @@ export default function BerandaPage() {
       </div>
 
       {/* Card Saldo Utama */}
-      <div className="bg-white rounded-[30px] p-2 mb-5">
+      <div className="bg-white rounded-[30px] p-2 mb-3">
         <section
           className="rounded-[24px] text-white px-5 pt-4 pb-5"
           style={{
@@ -267,10 +277,7 @@ export default function BerandaPage() {
       </div>
 
       {/* Metode Pembayaran */}
-      <section className="mb-5">
-        <h2 className="text-[14px] font-bold text-black mb-2.5">
-          Metode Pembayaran
-        </h2>
+      <section className="mb-3">
         <div className="rounded-[30px] p-3 bg-white border border-gray-100">
           <div className="bg-white rounded-[24px] py-4 px-5 flex items-center justify-between">
             <div className="flex-1 flex justify-start pr-1">
@@ -317,8 +324,10 @@ export default function BerandaPage() {
       </section>
 
       {/* Quick Access Layanan */}
-      <section className="mb-5">
-        <h2 className="text-[14px] font-bold text-[#111111] mb-2.5">Layanan</h2>
+      <section className="mb-3">
+        <h2 className="text-base font-semibold text-gray-800 mb-1">
+          Pintasan Layanan
+        </h2>
         <div className="bg-white rounded-[30px] p-3.5">
           <div className="grid grid-cols-4 gap-2.5">
             {LIST_LAYANAN.map((item) => (
@@ -327,7 +336,7 @@ export default function BerandaPage() {
                 onClick={() => router.push(`/transaksi?quick=${item.code}`)}
                 className="flex flex-col items-center justify-center cursor-pointer group active:scale-95 transition-all"
               >
-                <div className="w-20 h-20 bg-slate-50 group-hover:bg-gray-100 rounded-[18px] p-2.5 flex items-center justify-center relative">
+                <div className="w-20 h-20 bg-White group-hover:bg-gray-100 rounded-[18px] p-2.5 flex items-center justify-center relative">
                   <Image
                     src={item.imageSrc}
                     alt={item.label}
@@ -347,7 +356,7 @@ export default function BerandaPage() {
 
       {/* Statistik Barber */}
       <section className="mb-4">
-        <h2 className="text-[14px] font-bold text-black mb-2.5">
+        <h2 className="text-base font-semibold text-gray-800 mb-1">
           Statistik Barber
         </h2>
         <div className="bg-white rounded-[30px] p-3.5">
@@ -361,12 +370,6 @@ export default function BerandaPage() {
             <span className="col-span-1">S</span>
             <span className="col-span-2">Total</span>
           </div>
-
-          {dashboard.barberStats.length === 0 && (
-            <p className="text-center text-xs text-gray-400 py-6 font-medium">
-              Belum ada transaksi layanan hari ini
-            </p>
-          )}
 
           {dashboard.barberStats.map((b) => (
             <div
@@ -407,6 +410,32 @@ export default function BerandaPage() {
               </span>
             </div>
           ))}
+
+          {dashboard.barberStats.length > 0 && (
+            <div className="grid grid-cols-12 text-center py-2.5 px-2.5 text-[11px] items-center border-t-2 border-gray-100 bg-gray-50/50 rounded-b-[12px] mt-1">
+              <span className="col-span-5 text-left pl-1 font-bold text-gray-800">
+                Total Akumulasi
+              </span>
+              <span className="col-span-1 font-bold text-gray-800">
+                {totalD}
+              </span>
+              <span className="col-span-1 font-bold text-gray-800">
+                {totalA}
+              </span>
+              <span className="col-span-1 font-bold text-gray-800">
+                {totalB}
+              </span>
+              <span className="col-span-1 font-bold text-gray-800">
+                {totalC}
+              </span>
+              <span className="col-span-1 font-bold text-gray-800">
+                {totalS}
+              </span>
+              <span className="col-span-2 font-black text-[#3138E8]">
+                {totalAkumulasi}
+              </span>
+            </div>
+          )}
         </div>
       </section>
     </div>

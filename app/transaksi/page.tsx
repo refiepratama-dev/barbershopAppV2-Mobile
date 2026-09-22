@@ -9,6 +9,7 @@ type TransaksiRow = {
   id: string;
   total: number;
   metode_bayar: string;
+  created_at: string; // 👈 baru
   barbers: { nama: string } | null;
   transaksi_item: { nama_katalog_snapshot: string; qty: number }[];
 };
@@ -18,6 +19,7 @@ type PengeluaranRow = {
   nominal: number;
   kategori: string;
   keterangan: string;
+  created_at: string; // 👈 baru
 };
 
 type Barber = { id: string; nama: string };
@@ -109,14 +111,14 @@ export default function TransaksiPage() {
       supabase
         .from("transaksi")
         .select(
-          "id, total, metode_bayar, barbers(nama), transaksi_item(nama_katalog_snapshot, qty)"
+          "id, total, metode_bayar, created_at, barbers(nama), transaksi_item(nama_katalog_snapshot, qty)"
         )
         .gte("created_at", start)
         .lte("created_at", end)
         .order("created_at", { ascending: false }),
       supabase
         .from("pengeluaran")
-        .select("id, nominal, kategori, keterangan")
+        .select("id, nominal, kategori, keterangan, created_at")
         .gte("created_at", start)
         .lte("created_at", end)
         .order("created_at", { ascending: false }),
@@ -301,6 +303,15 @@ export default function TransaksiPage() {
     return split[1] !== undefined ? rupiah + "," + split[1] : rupiah;
   }
 
+  function formatJam(iso: string) {
+    return (
+      new Date(iso).toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }) + " WIB"
+    );
+  }
+
   async function handleConfirmPengeluaran() {
     const nominalNumber = Number(nominal.replace(/\./g, ""));
 
@@ -408,6 +419,9 @@ export default function TransaksiPage() {
                         {trx.total.toLocaleString("id-ID")}
                       </span>
                     </div>
+                    <span className="text-[10px] text-gray-400 mt-1">
+                      {formatJam(trx.created_at)}
+                    </span>
                   </div>
                 </div>
 
@@ -458,6 +472,9 @@ export default function TransaksiPage() {
                         {p.nominal.toLocaleString("id-ID")}
                       </span>
                     </div>
+                    <span className="text-[10px] text-gray-400 mt-1">
+                      {formatJam(p.created_at)}
+                    </span>
                   </div>
                 </div>
 
