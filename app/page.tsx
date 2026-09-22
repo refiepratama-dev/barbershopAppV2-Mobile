@@ -1,69 +1,414 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { Wallet, QrCode } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+
+type BarberStat = {
+  nama: string;
+  status_aktif: boolean;
+  D: number;
+  A: number;
+  B: number;
+  C: number;
+  S: number;
+  total: number;
+};
+
+type DashboardData = {
+  tokoBuka: boolean;
+  totalPendapatan: number;
+  totalPengeluaran: number;
+  totalKomisi: number;
+  totalCash: number;
+  totalQris: number;
+  barberStats: BarberStat[];
+};
+
+const LIST_LAYANAN = [
+  { label: "Dewasa", imageSrc: "/assets/layanan/lyn-dewasa.png", code: "D" },
+  { label: "Anak", imageSrc: "/assets/layanan/lyn-anak.png", code: "A" },
+  { label: "Bayi", imageSrc: "/assets/layanan/lyn-bayi.png", code: "B" },
+  { label: "Semir", imageSrc: "/assets/layanan/lyn-semir.png", code: "S" },
+];
+
+export default function BerandaPage() {
+  const router = useRouter();
+  const [kasir, setKasir] = useState({ nama: "", role: "" });
+
+  const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState<DashboardData>({
+    tokoBuka: true,
+    totalPendapatan: 0,
+    totalPengeluaran: 0,
+    totalKomisi: 0,
+    totalCash: 0,
+    totalQris: 0,
+    barberStats: [],
+  });
+
+  async function fetchKasirData() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data } = await supabase
+      .from("kasir")
+      .select("nama, role")
+      .eq("id", session.user.id)
+      .single();
+
+    if (data) setKasir(data);
+  }
+
+  useEffect(() => {
+    async function fetchDashboard() {
+      const now = new Date();
+      const offsetMs = now.getTimezoneOffset() * 60000;
+      const todayLocal = new Date(now.getTime() - offsetMs);
+      const today = todayLocal.toISOString().split("T")[0];
+
+      const startOfDayUTC = new Date(`${today}T00:00:00+07:00`).toISOString();
+      const endOfDayUTC = new Date(`${today}T23:59:59+07:00`).toISOString();
+
+      const [shiftRes, transaksiRes, pengeluaranRes] = await Promise.all([
+        supabase
+          .from("shift")
+          .select("status")
+          .eq("tanggal", today)
+          .maybeSingle(),
+        supabase
+          .from("transaksi")
+          .select(
+            "total, metode_bayar, barber_id, barbers(nama, status_aktif), transaksi_item(qty, nominal_komisi_snapshot, katalog_id, katalog(kode))"
+          )
+          .gte("created_at", startOfDayUTC)
+          .lte("created_at", endOfDayUTC),
+        supabase
+          .from("pengeluaran")
+          .select("nominal")
+          .gte("created_at", startOfDayUTC)
+          .lte("created_at", endOfDayUTC),
+      ]);
+
+      let pendapatan = 0,
+        cash = 0,
+        qris = 0,
+        totalKomisi = 0;
+      const statPerBarber: Record<string, BarberStat> = {};
+
+      transaksiRes.data?.forEach((trx: any) => {
+        pendapatan += trx.total;
+        if (trx.metode_bayar === "cash") cash += trx.total;
+        if (trx.metode_bayar === "qris") qris += trx.total;
+
+        const namaBarber = trx.barbers?.nama ?? "Tanpa Barber";
+        if (!statPerBarber[namaBarber]) {
+          statPerBarber[namaBarber] = {
+            nama: namaBarber,
+            status_aktif: trx.barbers?.status_aktif ?? true,
+            D: 0,
+            A: 0,
+            B: 0,
+            C: 0,
+            S: 0,
+            total: 0,
+          };
+        }
+
+        trx.transaksi_item?.forEach((item: any) => {
+          const kode = item.katalog?.kode as
+            | "D"
+            | "A"
+            | "B"
+            | "C"
+            | "S"
+            | undefined;
+          if (kode && statPerBarber[namaBarber][kode] !== undefined) {
+            statPerBarber[namaBarber][kode] += item.qty;
+            if (kode !== "C") {
+              statPerBarber[namaBarber].total += item.qty;
+            }
+          }
+          totalKomisi += (item.nominal_komisi_snapshot ?? 0) * (item.qty ?? 1);
+        });
+      });
+
+      const totalKeluar =
+        pengeluaranRes.data?.reduce((sum, p) => sum + p.nominal, 0) ?? 0;
+
+      setDashboard({
+        tokoBuka: shiftRes.data?.status !== "tutup",
+        totalPendapatan: pendapatan,
+        totalPengeluaran: totalKeluar,
+        totalKomisi: totalKomisi,
+        totalCash: cash,
+        totalQris: qris,
+        barberStats: Object.values(statPerBarber),
+      });
+
+      setLoading(false);
+    }
+
+    fetchDashboard();
+    fetchKasirData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full space-y-4 animate-pulse">
+        <div className="h-12 bg-gray-200 rounded-[20px]" />
+        <div className="h-44 bg-gray-200 rounded-[30px]" />
+        <div className="h-20 bg-gray-200 rounded-[30px]" />
+        <div className="h-28 bg-gray-200 rounded-[30px]" />
+      </div>
+    );
+  }
+
+  const saldo =
+    dashboard.totalPendapatan -
+    dashboard.totalKomisi -
+    dashboard.totalPengeluaran;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="w-full font-sans pb-32">
+      {/* Top Profile Bar */}
+      <div className="flex justify-between items-center mb-5">
+        <div>
+          <h1 className="text-2xl font-bold text-[#111111] tracking-tight">
+            Hello, {kasir.nama || "..."}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xs text-gray-400 font-medium mt-0.5 flex items-center gap-1.5">
+            <span>
+              {new Date().toLocaleDateString("id-ID", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+              })}
+            </span>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 font-bold text-sm">
+          {kasir.nama
+            .split(" ")
+            .map((n) => n[0])
+            .join("")}
         </div>
-      </main>
+      </div>
+
+      {/* Card Saldo Utama */}
+      <div className="bg-white rounded-[30px] p-2 mb-5">
+        <section
+          className="rounded-[24px] text-white px-5 pt-4 pb-5"
+          style={{
+            background: "linear-gradient(180deg, #3138E8 0%, #5E68FF 100%)",
+          }}
+        >
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-[13px] font-medium tracking-wide text-white">
+              Saldo Hari Ini
+            </span>
+            <span
+              className={`text-[11px] font-bold px-3 py-1 rounded-full ${
+                dashboard.tokoBuka
+                  ? "bg-[#BEF264] text-black"
+                  : "bg-black text-white"
+              }`}
+            >
+              {dashboard.tokoBuka ? "Toko Buka" : "Toko Tutup"}
+            </span>
+          </div>
+
+          <div className="flex items-start gap-1">
+            <span className="text-xs font-medium tracking-wider py-0.5 rounded-md text-white">
+              Rp
+            </span>
+            <span className="text-[36px] font-black tracking-tight leading-none">
+              {saldo.toLocaleString("id-ID")}
+            </span>
+          </div>
+        </section>
+
+        {/* Ringkasan Pendapatan & Pengeluaran */}
+        <div className="py-3 px-4 flex items-center justify-around">
+          {/* Pengeluaran */}
+          <div className="flex flex-col">
+            <span className="text-[11px] font-medium text-gray-500">
+              Pengeluaran
+            </span>
+            <div className="flex items-start gap-0.5 mt-0.5">
+              <span className="text-[9px] font-medium text-[#DC2626]">Rp</span>
+              <span className="text-[13px] font-bold text-[#DC2626] leading-none">
+                {dashboard.totalPengeluaran.toLocaleString("id-ID")}
+              </span>
+            </div>
+          </div>
+
+          {/* Pemisah Garis Vertikal */}
+          <div className="w-[1px] h-[28px] bg-slate-200 shrink-0" />
+
+          {/* Pendapatan */}
+          <div className="flex flex-col text-right items-end">
+            <span className="text-[11px] font-medium text-gray-500">
+              Pendapatan
+            </span>
+            <div className="flex items-start gap-0.5 mt-0.5">
+              <span className="text-[9px] font-bold text-[#16A34A]">Rp</span>
+              <span className="text-[13px] font-bold text-[#16A34A] leading-none">
+                {dashboard.totalPendapatan.toLocaleString("id-ID")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Metode Pembayaran */}
+      <section className="mb-5">
+        <h2 className="text-[14px] font-bold text-black mb-2.5">
+          Metode Pembayaran
+        </h2>
+        <div className="rounded-[30px] p-3 bg-white border border-gray-100">
+          <div className="bg-white rounded-[24px] py-4 px-5 flex items-center justify-between">
+            <div className="flex-1 flex justify-start pr-1">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-medium text-gray-400 block">
+                    Cash
+                  </span>
+                  <div className="flex items-start gap-0.5">
+                    <span className="text-[9px] font-bold text-black">Rp</span>
+                    <span className="text-[13px] font-bold text-black leading-none">
+                      {dashboard.totalCash.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-[1px] h-[30px] bg-slate-200 shrink-0 mx-2" />
+
+            <div className="flex-1 flex justify-end pl-1">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                  <QrCode className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-medium text-gray-400 block">
+                    QRIS
+                  </span>
+                  <div className="flex items-start gap-0.5">
+                    <span className="text-[9px] font-bold text-black">Rp</span>
+                    <span className="text-[13px] font-bold text-[#111111] leading-none">
+                      {dashboard.totalQris.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Access Layanan */}
+      <section className="mb-5">
+        <h2 className="text-[14px] font-bold text-[#111111] mb-2.5">Layanan</h2>
+        <div className="bg-white rounded-[30px] p-3.5">
+          <div className="grid grid-cols-4 gap-2.5">
+            {LIST_LAYANAN.map((item) => (
+              <div
+                key={item.code}
+                onClick={() => router.push(`/transaksi?quick=${item.code}`)}
+                className="flex flex-col items-center justify-center cursor-pointer group active:scale-95 transition-all"
+              >
+                <div className="w-20 h-20 bg-slate-50 group-hover:bg-gray-100 rounded-[18px] p-2.5 flex items-center justify-center relative">
+                  <Image
+                    src={item.imageSrc}
+                    alt={item.label}
+                    width={40}
+                    height={40}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
+                <span className="text-[11px] font-semibold text-gray-700 mt-1.5 text-center">
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Statistik Barber */}
+      <section className="mb-4">
+        <h2 className="text-[14px] font-bold text-black mb-2.5">
+          Statistik Barber
+        </h2>
+        <div className="bg-white rounded-[30px] p-3.5">
+          <div className="bg-slate-100 rounded-[16px] px-2.5 py-2 grid grid-cols-12 text-center mb-2.5 text-[10px] font-bold text-gray-600">
+            <span className="col-span-3 text-left pl-1">Nama</span>
+            <span className="col-span-2">Status</span>
+            <span className="col-span-1">D</span>
+            <span className="col-span-1">A</span>
+            <span className="col-span-1">B</span>
+            <span className="col-span-1">C</span>
+            <span className="col-span-1">S</span>
+            <span className="col-span-2">Total</span>
+          </div>
+
+          {dashboard.barberStats.length === 0 && (
+            <p className="text-center text-xs text-gray-400 py-6 font-medium">
+              Belum ada transaksi layanan hari ini
+            </p>
+          )}
+
+          {dashboard.barberStats.map((b) => (
+            <div
+              key={b.nama}
+              className="grid grid-cols-12 text-center py-2 px-2.5 text-[11px] items-center border-b border-gray-50 last:border-none"
+            >
+              <span className="col-span-3 text-left pl-1 font-bold text-gray-800 truncate">
+                {b.nama}
+              </span>
+              <div className="col-span-2 flex justify-center">
+                <span
+                  className={`text-[9px] font-bold px-2 py-[2px] rounded-full ${
+                    b.status_aktif
+                      ? "bg-[#BEF264] text-black"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {b.status_aktif ? "Aktif" : "Off"}
+                </span>
+              </div>
+              <span className="col-span-1 font-medium text-gray-600">
+                {b.D}
+              </span>
+              <span className="col-span-1 font-medium text-gray-600">
+                {b.A}
+              </span>
+              <span className="col-span-1 font-medium text-gray-600">
+                {b.B}
+              </span>
+              <span className="col-span-1 font-medium text-gray-600">
+                {b.C}
+              </span>
+              <span className="col-span-1 font-medium text-gray-600">
+                {b.S}
+              </span>
+              <span className="col-span-2 font-bold text-[#3138E8]">
+                {b.total}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
