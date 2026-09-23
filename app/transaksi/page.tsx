@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Pencil, Plus, Trash2, X, Minus } from "lucide-react";
@@ -9,7 +9,7 @@ type TransaksiRow = {
   id: string;
   total: number;
   metode_bayar: string;
-  created_at: string; // 👈 baru
+  created_at: string;
   barbers: { nama: string } | null;
   transaksi_item: { nama_katalog_snapshot: string; qty: number }[];
 };
@@ -19,7 +19,7 @@ type PengeluaranRow = {
   nominal: number;
   kategori: string;
   keterangan: string;
-  created_at: string; // 👈 baru
+  created_at: string;
 };
 
 type Barber = { id: string; nama: string };
@@ -28,7 +28,7 @@ type Layanan = {
   id: string;
   kode: string;
   nama: string;
-  kategori: string; // 'layanan' | 'produk'
+  kategori: "layanan" | "produk";
   harga: number;
   nominal_komisi: number;
 };
@@ -44,8 +44,10 @@ export default function TransaksiPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // --- State khusus modal Tambah Transaksi ---
+  // State Modal Tambah Transaksi
   const [showModalTransaksi, setShowModalTransaksi] = useState(false);
+  const [animateTransaksi, setAnimateTransaksi] = useState(false);
+
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [layananList, setLayananList] = useState<Layanan[]>([]);
   const [selectedBarberId, setSelectedBarberId] = useState("");
@@ -53,51 +55,36 @@ export default function TransaksiPage() {
   const [qtyMap, setQtyMap] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
 
-  // --- State khusus modal Tambah Pengeluaran ---
+  // State Modal Tambah Pengeluaran
   const [showModalPengeluaran, setShowModalPengeluaran] = useState(false);
+  const [animatePengeluaran, setAnimatePengeluaran] = useState(false);
+
   const [keterangan, setKeterangan] = useState("");
   const [nominal, setNominal] = useState("");
   const [kategori, setKategori] = useState<"rutin" | "insidental">("rutin");
 
-  useEffect(() => {
-    fetchData();
-    const quickKode = searchParams.get("quick");
-    if (quickKode) {
-      handleQuickAccess(quickKode);
-    }
-  }, []);
-
-  async function handleQuickAccess(kode: string) {
-    const [{ data: b }, { data: l }] = await Promise.all([
-      supabase
-        .from("barbers")
-        .select("id, nama")
-        .eq("status_aktif", true)
-        .order("nama"),
-      supabase
-        .from("katalog")
-        .select("id, kode, nama, kategori, harga, nominal_komisi")
-        .eq("is_active", true)
-        .order("nama"),
-    ]);
-    setBarbers(b ?? []);
-    setLayananList(l ?? []);
-    setSelectedBarberId("");
-    setMetodeBayar("cash");
-    const target = (l ?? []).find((item) => item.kode === kode);
-    setQtyMap(target ? { [target.id]: 1 } : {});
+  // Handler Buka / Tutup Modal dengan Animasi
+  const openModalTransaksiHandler = () => {
     setShowModalTransaksi(true);
-    router.replace("/transaksi"); // bersihkan URL biar nggak ke-trigger ulang kalau refresh
-  }
+    setTimeout(() => setAnimateTransaksi(true), 10);
+  };
 
-  async function getCurrentKasirId() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    return session?.user.id ?? null;
-  }
+  const closeModalTransaksiHandler = () => {
+    setAnimateTransaksi(false);
+    setTimeout(() => setShowModalTransaksi(false), 300);
+  };
 
-  async function fetchData() {
+  const openModalPengeluaranHandler = () => {
+    setShowModalPengeluaran(true);
+    setTimeout(() => setAnimatePengeluaran(true), 10);
+  };
+
+  const closeModalPengeluaranHandler = () => {
+    setAnimatePengeluaran(false);
+    setTimeout(() => setShowModalPengeluaran(false), 300);
+  };
+
+  const fetchData = useCallback(async () => {
     setLoading(true);
 
     const now = new Date();
@@ -123,9 +110,58 @@ export default function TransaksiPage() {
         .lte("created_at", end)
         .order("created_at", { ascending: false }),
     ]);
-    setTransaksiList((trx as any) ?? []);
-    setPengeluaranList(keluar ?? []);
+
+    setTransaksiList((trx as unknown as TransaksiRow[]) ?? []);
+    setPengeluaranList((keluar as PengeluaranRow[]) ?? []);
     setLoading(false);
+  }, []);
+
+  const handleQuickAccess = useCallback(
+    async (kode: string) => {
+      const [{ data: b }, { data: l }] = await Promise.all([
+        supabase
+          .from("barbers")
+          .select("id, nama")
+          .eq("status_aktif", true)
+          .order("nama"),
+        supabase
+          .from("katalog")
+          .select("id, kode, nama, kategori, harga, nominal_komisi")
+          .eq("is_active", true)
+          .order("nama"),
+      ]);
+
+      setBarbers(b ?? []);
+      setLayananList((l as Layanan[]) ?? []);
+      setSelectedBarberId("");
+      setMetodeBayar("cash");
+
+      const target = (l ?? []).find((item) => item.kode === kode);
+      setQtyMap(target ? { [target.id]: 1 } : {});
+      openModalTransaksiHandler();
+      router.replace("/transaksi");
+    },
+    [router]
+  );
+
+  useEffect(() => {
+    fetchData();
+    const quickKode = searchParams.get("quick");
+    if (quickKode) {
+      handleQuickAccess(quickKode);
+    }
+  }, [fetchData, handleQuickAccess, searchParams]);
+
+  async function getCurrentKasirId() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.user.id ?? null;
+  }
+
+  function exitEditMode() {
+    setIsEditMode(false);
+    setSelectedIds([]);
   }
 
   function switchTab(newTab: "transaksi" | "pengeluaran") {
@@ -137,11 +173,6 @@ export default function TransaksiPage() {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  }
-
-  function exitEditMode() {
-    setIsEditMode(false);
-    setSelectedIds([]);
   }
 
   async function handleFabClick() {
@@ -176,7 +207,6 @@ export default function TransaksiPage() {
     exitEditMode();
   }
 
-  // --- Fungsi modal Tambah Transaksi ---
   async function openModalTransaksi() {
     const [{ data: b }, { data: l }] = await Promise.all([
       supabase
@@ -190,12 +220,13 @@ export default function TransaksiPage() {
         .eq("is_active", true)
         .order("nama"),
     ]);
+
     setBarbers(b ?? []);
-    setLayananList(l ?? []);
+    setLayananList((l as Layanan[]) ?? []);
     setSelectedBarberId("");
     setMetodeBayar("cash");
     setQtyMap({});
-    setShowModalTransaksi(true);
+    openModalTransaksiHandler();
   }
 
   function changeQty(layananId: string, delta: number) {
@@ -203,6 +234,7 @@ export default function TransaksiPage() {
       const current = prev[layananId] ?? 0;
       const next = Math.max(0, current + delta);
       const updated = { ...prev };
+
       if (next === 0) {
         delete updated[layananId];
       } else {
@@ -276,24 +308,23 @@ export default function TransaksiPage() {
     }
 
     setSaving(false);
-    setShowModalTransaksi(false);
+    closeModalTransaksiHandler();
     await fetchData();
   }
 
-  // --- Fungsi modal Tambah Pengeluaran ---
   function openModalPengeluaran() {
     setKeterangan("");
     setNominal("");
     setKategori("rutin");
-    setShowModalPengeluaran(true);
+    openModalPengeluaranHandler();
   }
 
   function formatRupiah(value: string) {
     const numberString = value.replace(/[^,\d]/g, "").toString();
     const split = numberString.split(",");
     const sisa = split[0].length % 3;
-    let rupiah = split[0].substr(0, sisa);
-    const ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    let rupiah = split[0].substring(0, sisa);
+    const ribuan = split[0].substring(sisa).match(/\d{3}/gi);
 
     if (ribuan) {
       const separator = sisa ? "." : "";
@@ -341,7 +372,7 @@ export default function TransaksiPage() {
       return;
     }
 
-    setShowModalPengeluaran(false);
+    closeModalPengeluaranHandler();
     await fetchData();
   }
 
@@ -494,12 +525,8 @@ export default function TransaksiPage() {
         <div className="w-full max-w-[425px] relative px-8 flex items-center justify-center h-16">
           <button
             onClick={handleFabClick}
-            className={`pointer-events-auto w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all active:scale-90 ${
-              isEditMode
-                ? "bg-[#DC2626] text-white"
-                : tab === "pengeluaran"
-                ? "bg-white text-black"
-                : "bg-white text-black"
+            className={`pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+              isEditMode ? "bg-[#DC2626] text-white" : "bg-white text-black"
             }`}
           >
             {isEditMode ? <Trash2 size={22} /> : <Plus size={26} />}
@@ -510,7 +537,7 @@ export default function TransaksiPage() {
               onClick={() =>
                 isEditMode ? exitEditMode() : setIsEditMode(true)
               }
-              className={`pointer-events-auto absolute right-8 w-10 h-10 rounded-full shadow-md flex items-center justify-center transition-all active:scale-90 ${
+              className={`pointer-events-auto absolute right-8 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${
                 isEditMode
                   ? "bg-red-100 text-red-600 border border-red-200"
                   : "bg-white text-gray-600 border border-gray-100"
@@ -524,14 +551,24 @@ export default function TransaksiPage() {
 
       {/* Bottom Sheet: Tambah Transaksi */}
       {showModalTransaksi && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+        <div
+          onClick={closeModalTransaksiHandler}
+          className={`fixed inset-0 z-[100] flex items-end justify-center bg-black/50 transition-opacity duration-300 ${
+            animateTransaksi ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 max-h-[85vh] overflow-y-auto transform transition-transform duration-300 ease-out ${
+              animateTransaksi ? "translate-y-0" : "translate-y-full"
+            }`}
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-bold text-[#111111]">
                 Tambah Transaksi
               </h3>
               <button
-                onClick={() => setShowModalTransaksi(false)}
+                onClick={closeModalTransaksiHandler}
                 className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"
               >
                 <X size={16} />
@@ -566,7 +603,7 @@ export default function TransaksiPage() {
                   onClick={() => setMetodeBayar("cash")}
                   className={`h-10 rounded-[14px] font-bold text-xs transition-all ${
                     metodeBayar === "cash"
-                      ? "bg-black text-white"
+                      ? "bg-[#3138E8] text-white"
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
@@ -577,7 +614,7 @@ export default function TransaksiPage() {
                   onClick={() => setMetodeBayar("qris")}
                   className={`h-10 rounded-[14px] font-bold text-xs transition-all ${
                     metodeBayar === "qris"
-                      ? "bg-black text-white"
+                      ? "bg-[#3138E8] text-white"
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
@@ -703,7 +740,7 @@ export default function TransaksiPage() {
               type="button"
               onClick={handleConfirmTransaksi}
               disabled={saving}
-              className="w-full py-3.5 rounded-[20px] bg-[#3138E8] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
+              className="w-full py-3.5 rounded-[20px] bg-[#3138E8] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform"
             >
               {saving ? "Menyimpan..." : "Simpan Transaksi"}
             </button>
@@ -713,14 +750,24 @@ export default function TransaksiPage() {
 
       {/* Bottom Sheet: Tambah Pengeluaran */}
       {showModalPengeluaran && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 animate-in slide-in-from-bottom duration-400">
+        <div
+          onClick={closeModalPengeluaranHandler}
+          className={`fixed inset-0 z-[100] flex items-end justify-center bg-black/50 transition-opacity duration-300 ${
+            animatePengeluaran ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 transform transition-transform duration-300 ease-out ${
+              animatePengeluaran ? "translate-y-0" : "translate-y-full"
+            }`}
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-bold text-[#111111]">
                 Tambah Pengeluaran
               </h3>
               <button
-                onClick={() => setShowModalPengeluaran(false)}
+                onClick={closeModalPengeluaranHandler}
                 className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"
               >
                 <X size={16} />
@@ -745,7 +792,7 @@ export default function TransaksiPage() {
                 <label className="block text-xs font-bold text-gray-600 mb-1.5">
                   Nominal
                 </label>
-                <div className="relative flex items-center">
+                <div className="relative flex items-[#111111] items-center">
                   <span className="absolute left-4 text-xs font-bold text-gray-400">
                     Rp
                   </span>
@@ -780,7 +827,7 @@ export default function TransaksiPage() {
               type="button"
               onClick={handleConfirmPengeluaran}
               disabled={saving}
-              className="w-full py-3.5 rounded-[20px] bg-[#DC2626] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
+              className="w-full py-3.5 rounded-[20px] bg-[#DC2626] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform"
             >
               {saving ? "Menyimpan..." : "Simpan Pengeluaran"}
             </button>

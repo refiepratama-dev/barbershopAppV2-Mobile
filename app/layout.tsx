@@ -23,8 +23,22 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Barbershop POS",
-  description: "Aplikasi POS Barbershop Mobile",
+  title: "Rafel POS",
+  description: "Aplikasi POS Barbershop Mobile Rafel Pangkas Rambut",
+
+  // Konfigurasi Logo menggunakan file public/scissors.svg
+  icons: {
+    icon: "/scissors.svg",
+    shortcut: "/scissors.svg",
+    apple: "/scissors.svg",
+  },
+
+  // Tampilan nama & ikon saat di-install di iPhone (PWA)
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Rafel POS",
+  },
 };
 
 export default function RootLayout({
