@@ -15,6 +15,7 @@ type BarberStat = {
   C: number;
   S: number;
   total: number;
+  pendapatan: number; // 👈 baru
 };
 
 type DashboardData = {
@@ -74,38 +75,60 @@ export default function BerandaPage() {
       const startOfDayUTC = new Date(`${today}T00:00:00+07:00`).toISOString();
       const endOfDayUTC = new Date(`${today}T23:59:59+07:00`).toISOString();
 
-      const [shiftRes, transaksiRes, pengeluaranRes] = await Promise.all([
-        supabase
-          .from("shift")
-          .select("status")
-          .eq("tanggal", today)
-          .maybeSingle(),
-        supabase
-          .from("transaksi")
-          .select(
-            "total, metode_bayar, barber_id, barbers(nama, status_aktif), transaksi_item(qty, nominal_komisi_snapshot, katalog_id, katalog(kode))"
-          )
-          .gte("created_at", startOfDayUTC)
-          .lte("created_at", endOfDayUTC),
-        supabase
-          .from("pengeluaran")
-          .select("nominal")
-          .gte("created_at", startOfDayUTC)
-          .lte("created_at", endOfDayUTC),
-      ]);
+      // Mengambil daftar barber, shift, transaksi, dan pengeluaran secara parsial/paralel
+      const [barbersRes, shiftRes, transaksiRes, pengeluaranRes] =
+        await Promise.all([
+          supabase.from("barbers").select("id, nama, status_aktif"),
+          supabase
+            .from("shift")
+            .select("status")
+            .eq("tanggal", today)
+            .maybeSingle(),
+          supabase
+            .from("transaksi")
+            .select(
+              "total, metode_bayar, barber_id, barbers(nama, status_aktif), transaksi_item(qty, subtotal, nominal_komisi_snapshot, katalog_id, katalog(kode))"
+            )
+            .gte("created_at", startOfDayUTC)
+            .lte("created_at", endOfDayUTC),
+          supabase
+            .from("pengeluaran")
+            .select("nominal")
+            .gte("created_at", startOfDayUTC)
+            .lte("created_at", endOfDayUTC),
+        ]);
 
       let pendapatan = 0,
         cash = 0,
         qris = 0,
         totalKomisi = 0;
+
       const statPerBarber: Record<string, BarberStat> = {};
 
+      // Inisialisasi awal seluruh barber agar selalu muncul di tabel statistik
+      barbersRes.data?.forEach((b) => {
+        statPerBarber[b.nama] = {
+          nama: b.nama,
+          status_aktif: b.status_aktif,
+          D: 0,
+          A: 0,
+          B: 0,
+          C: 0,
+          S: 0,
+          total: 0,
+          pendapatan: 0, // 👈 baru
+        };
+      });
+
+      // Proses data dari transaksi yang ada hari ini
       transaksiRes.data?.forEach((trx: any) => {
         pendapatan += trx.total;
         if (trx.metode_bayar === "cash") cash += trx.total;
         if (trx.metode_bayar === "qris") qris += trx.total;
 
         const namaBarber = trx.barbers?.nama ?? "Tanpa Barber";
+
+        // Jaga-jaga jika ada transaksi dengan barber di luar daftar `barbers`
         if (!statPerBarber[namaBarber]) {
           statPerBarber[namaBarber] = {
             nama: namaBarber,
@@ -116,6 +139,7 @@ export default function BerandaPage() {
             C: 0,
             S: 0,
             total: 0,
+            pendapatan: 0, // 👈 baru
           };
         }
 
@@ -133,6 +157,7 @@ export default function BerandaPage() {
               statPerBarber[namaBarber].total += item.qty;
             }
           }
+          statPerBarber[namaBarber].pendapatan += item.subtotal ?? 0; // 👈 baru
           totalKomisi += (item.nominal_komisi_snapshot ?? 0) * (item.qty ?? 1);
         });
       });
@@ -168,20 +193,14 @@ export default function BerandaPage() {
     );
   }
 
-  const saldo =
-    dashboard.totalPendapatan -
-    dashboard.totalKomisi -
-    dashboard.totalPengeluaran;
+  const saldo = dashboard.totalPendapatan - dashboard.totalPengeluaran;
 
-    const totalD = dashboard.barberStats.reduce((a, b) => a + b.D, 0);
-    const totalA = dashboard.barberStats.reduce((a, b) => a + b.A, 0);
-    const totalB = dashboard.barberStats.reduce((a, b) => a + b.B, 0);
-    const totalC = dashboard.barberStats.reduce((a, b) => a + b.C, 0);
-    const totalS = dashboard.barberStats.reduce((a, b) => a + b.S, 0);
-    const totalAkumulasi = dashboard.barberStats.reduce(
-      (a, b) => a + b.total,
-      0
-    );
+  const totalD = dashboard.barberStats.reduce((a, b) => a + b.D, 0);
+  const totalA = dashboard.barberStats.reduce((a, b) => a + b.A, 0);
+  const totalB = dashboard.barberStats.reduce((a, b) => a + b.B, 0);
+  const totalC = dashboard.barberStats.reduce((a, b) => a + b.C, 0);
+  const totalS = dashboard.barberStats.reduce((a, b) => a + b.S, 0);
+  const totalAkumulasi = dashboard.barberStats.reduce((a, b) => a + b.total, 0);
 
   return (
     <div className="w-full font-sans">
@@ -204,9 +223,11 @@ export default function BerandaPage() {
 
         <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 font-bold text-sm">
           {kasir.nama
-            .split(" ")
-            .map((n) => n[0])
-            .join("")}
+            ? kasir.nama
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+            : ""}
         </div>
       </div>
 
@@ -336,7 +357,7 @@ export default function BerandaPage() {
                 onClick={() => router.push(`/transaksi?quick=${item.code}`)}
                 className="flex flex-col items-center justify-center cursor-pointer group active:scale-95 transition-all"
               >
-                <div className="w-20 h-20 bg-White group-hover:bg-gray-100 rounded-[18px] p-2.5 flex items-center justify-center relative">
+                <div className="w-20 h-20 bg-white group-hover:bg-gray-100 rounded-[18px] p-2.5 flex items-center justify-center relative">
                   <Image
                     src={item.imageSrc}
                     alt={item.label}
@@ -376,9 +397,14 @@ export default function BerandaPage() {
               key={b.nama}
               className="grid grid-cols-12 text-center py-2 px-2.5 text-[11px] items-center border-b border-gray-50 last:border-none"
             >
-              <span className="col-span-3 text-left pl-1 font-bold text-gray-800 truncate">
-                {b.nama}
-              </span>
+              <div className="col-span-3 text-left pl-1 flex flex-col">
+                <span className="font-bold text-gray-800 truncate">
+                  {b.nama}
+                </span>
+                <span className="text-[9px] font-semibold text-[#16A34A]">
+                  Rp {b.pendapatan.toLocaleString("id-ID")}
+                </span>
+              </div>
               <div className="col-span-2 flex justify-center">
                 <span
                   className={`text-[9px] font-bold px-2 py-[2px] rounded-full ${
@@ -414,7 +440,7 @@ export default function BerandaPage() {
           {dashboard.barberStats.length > 0 && (
             <div className="grid grid-cols-12 text-center py-2.5 px-2.5 text-[11px] items-center border-t-2 border-gray-100 bg-gray-50/50 rounded-b-[12px] mt-1">
               <span className="col-span-5 text-left pl-1 font-bold text-gray-800">
-                Total Akumulasi
+                Total Pelanggan
               </span>
               <span className="col-span-1 font-bold text-gray-800">
                 {totalD}
