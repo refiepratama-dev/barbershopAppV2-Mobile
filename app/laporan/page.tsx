@@ -17,6 +17,13 @@ type KomisiBarber = {
   komisi: number;
 };
 
+type ItemPengeluaran = {
+  id: string;
+  keterangan: string;
+  nominal: number;
+  created_at: string;
+};
+
 type DetailLaporan = {
   omzetLayanan: number;
   omzetProduk: number;
@@ -26,6 +33,7 @@ type DetailLaporan = {
   kasKeluar: number;
   labaBersih: number;
   komisiPerBarber: KomisiBarber[];
+  daftarPengeluaran: ItemPengeluaran[];
 };
 
 function getRangeUTC(tanggal: string) {
@@ -99,9 +107,10 @@ export default function LaporanPage() {
         .lte("created_at", end),
       supabase
         .from("pengeluaran")
-        .select("nominal")
+        .select("id, keterangan, nominal, created_at")
         .gte("created_at", start)
-        .lte("created_at", end),
+        .lte("created_at", end)
+        .order("created_at", { ascending: false }),
     ]);
 
     let omzetLayanan = 0;
@@ -136,7 +145,8 @@ export default function LaporanPage() {
       });
     });
 
-    const kasKeluar = pengeluaran?.reduce((sum, p) => sum + p.nominal, 0) ?? 0;
+    const daftarPengeluaran: ItemPengeluaran[] = pengeluaran ?? [];
+    const kasKeluar = daftarPengeluaran.reduce((sum, p) => sum + p.nominal, 0);
     const totalOmzet = omzetLayanan + omzetProduk;
 
     setDetail({
@@ -148,6 +158,7 @@ export default function LaporanPage() {
       kasKeluar,
       labaBersih: totalOmzet - totalKomisi - kasKeluar,
       komisiPerBarber: Object.values(komisiMap),
+      daftarPengeluaran,
     });
     setDetailLoading(false);
   }
@@ -176,16 +187,16 @@ export default function LaporanPage() {
     );
   }
 
-  // ===== VIEW: DETAIL (GAYA STRUK) =====
+  // ===== VIEW: DETAIL =====
   if (selectedShift) {
     return (
       <div className="w-full font-sans pb-32 text-black">
         <button
           onClick={closeDetail}
-          className="flex items-center gap-1 bg-black px-3 py-1.5 rounded-[30px] mb-4 active:opacity-80 transition-opacity"
+          className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-[30px] mb-4 active:opacity-80 transition-opacity border border-gray-100 shadow-sm"
         >
-          <ChevronLeft size={16} className="text-white/60" />
-          <span className="text-[11px] text-white font-semibold tracking-wider">
+          <ChevronLeft size={16} className="text-black" />
+          <span className="text-[11px] text-black font-semibold tracking-wider">
             Kembali
           </span>
         </button>
@@ -199,31 +210,32 @@ export default function LaporanPage() {
         )}
 
         {!detailLoading && detail && (
-          <div className="bg-white rounded-[24px] p-6 shadow-sm relative border border-gray-100">
+          <div className="bg-white rounded-[24px] p-6 shadow relative border border-gray-100">
             {/* Header Struk */}
             <div className="flex flex-col items-center text-center pb-6 border-b border-dashed border-gray-200">
               <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3 text-black">
                 <FileText size={24} />
               </div>
-              <h2 className="text-sm font-bold text-black uppercase tracking-wider">
+
+              <h2 className="text-sm font-bold text-[#494949]">
                 Laporan Harian
               </h2>
-              <span className="text-xs text-gray-400 font-medium mt-0.5">
+              <span className="text-xs text-gray-400 font-normal mt-0.5">
                 {formatTanggal(selectedShift.tanggal)}
               </span>
             </div>
 
             {/* Bagian 1: Informasi Waktu & Status */}
             <div className="py-4 border-b border-dashed border-gray-200 space-y-2.5 text-[13px]">
-              <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">Status Shift</span>
-                <span className="font-medium text-white bg-black px-2 py-0.5 rounded-[30px] text-[11px]">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 font-normal">Status Shift</span>
+                <span className="font-normal text-white bg-black px-2.5 py-0.5 rounded-[30px] text-[11px]">
                   Ditutup
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">Waktu Tutup</span>
-                <span className="font-semibold text-black">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 font-normal">Waktu Tutup</span>
+                <span className="font-normal text-black">
                   {formatWaktu(selectedShift.ditutup_at)}
                 </span>
               </div>
@@ -235,56 +247,91 @@ export default function LaporanPage() {
                 Ringkasan Kas
               </p>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Omzet Layanan</span>
-                <span className="font-bold text-emerald-600">
+                <span className="text-gray-600 font-normal">Omzet Layanan</span>
+                <span className="font-normal text-emerald-600">
                   Rp {detail.omzetLayanan.toLocaleString("id-ID")}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Omzet Produk</span>
-                <span className="font-bold text-emerald-600">
+                <span className="text-gray-600 font-normal">Omzet Produk</span>
+                <span className="font-normal text-emerald-600">
                   Rp {detail.omzetProduk.toLocaleString("id-ID")}
                 </span>
               </div>
               <div className="flex justify-between pl-3 text-xs">
-                <span className="text-gray-400">• Tunai (Cash)</span>
-                <span className="font-medium text-black">
+                <span className="text-gray-400 font-normal">
+                  • Tunai (Cash)
+                </span>
+                <span className="font-normal text-black">
                   Rp {detail.totalCash.toLocaleString("id-ID")}
                 </span>
               </div>
               <div className="flex justify-between pl-3 text-xs">
-                <span className="text-gray-400">• QRIS</span>
-                <span className="font-medium text-black">
+                <span className="text-gray-400 font-normal">• QRIS</span>
+                <span className="font-normal text-black">
                   Rp {detail.totalQris.toLocaleString("id-ID")}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Total Komisi</span>
-                <span className="font-bold text-red-500">
+                <span className="text-gray-600 font-normal">Total Komisi</span>
+                <span className="font-normal text-red-500">
                   − Rp {detail.totalKomisi.toLocaleString("id-ID")}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Kas Keluar</span>
-                <span className="font-bold text-red-500">
+                <span className="text-gray-600 font-normal">Kas Keluar</span>
+                <span className="font-normal text-red-500">
                   − Rp {detail.kasKeluar.toLocaleString("id-ID")}
                 </span>
               </div>
-              <div className="flex justify-between pt-1 font-bold text-black text-sm">
-                <span>Laba Bersih</span>
-                <span className="text-emerald-600 text-base">
+
+              {/* KHUSUS LABA BERSIH: TETAP BOLD */}
+              <div className="flex justify-between pt-2 border-t border-gray-100 text-sm">
+                <span className="font-bold text-black">Laba Bersih</span>
+                <span className="text-emerald-600 text-base font-bold">
                   Rp {detail.labaBersih.toLocaleString("id-ID")}
                 </span>
               </div>
             </div>
 
-            {/* Bagian 3: Rincian Komisi Per Barber */}
+            {/* Bagian 3: Detail Pengeluaran Harian */}
+            <div className="py-4 border-b border-dashed border-gray-200 space-y-2.5 text-[13px]">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Rincian Pengeluaran
+              </p>
+              {detail.daftarPengeluaran.length === 0 ? (
+                <p className="text-center text-gray-400 text-xs py-2 font-normal">
+                  Tidak ada pengeluaran
+                </p>
+              ) : (
+                detail.daftarPengeluaran.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex justify-between items-center py-1"
+                  >
+                    <div>
+                      <span className="font-normal text-black block text-[13px] capitalize">
+                        {p.keterangan || "Pengeluaran Kas"}
+                      </span>
+                      <span className="text-[11px] text-gray-400 font-normal">
+                        {formatWaktu(p.created_at)}
+                      </span>
+                    </div>
+                    <span className="font-normal text-red-500 text-[13px]">
+                      - Rp {p.nominal.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Bagian 4: Rincian Komisi Per Barber */}
             <div className="pt-4 space-y-2.5 text-[13px]">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Komisi Barber
               </p>
               {detail.komisiPerBarber.length === 0 ? (
-                <p className="text-center text-gray-400 text-xs py-4 font-medium">
+                <p className="text-center text-gray-400 text-xs py-4 font-normal">
                   Tidak ada transaksi
                 </p>
               ) : (
@@ -294,14 +341,14 @@ export default function LaporanPage() {
                     className="flex justify-between items-center py-1"
                   >
                     <div>
-                      <span className="font-semibold text-black block text-[13px]">
+                      <span className="font-normal text-black block text-[13px]">
                         {b.nama}
                       </span>
-                      <span className="text-[11px] text-gray-400">
+                      <span className="text-[11px] text-gray-400 font-normal">
                         Omzet: Rp {b.omzet.toLocaleString("id-ID")}
                       </span>
                     </div>
-                    <span className="font-bold text-black text-[13px]">
+                    <span className="font-normal text-black text-[13px]">
                       Rp {b.komisi.toLocaleString("id-ID")}
                     </span>
                   </div>
@@ -317,8 +364,10 @@ export default function LaporanPage() {
   // ===== VIEW: LIST =====
   return (
     <div className="w-full font-sans pb-32 text-black">
-      <div className="bg-white rounded-[30px] p-5 shadow-sm">
-        <h2 className="text-sm font-bold text-[#111111]">Riwayat Laporan</h2>
+      <div className="bg-white rounded-[30px] p-5 shadow-sm border border-gray-100">
+        <h2 className="text-sm font-bold text-[#494949] mb-2">
+          Riwayat Laporan
+        </h2>
 
         {loading && (
           <p className="text-center text-gray-400 text-xs py-12 font-medium">

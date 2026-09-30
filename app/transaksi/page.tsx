@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Pencil, Plus, Trash2, X, Minus } from "lucide-react";
@@ -63,25 +63,64 @@ export default function TransaksiPage() {
   const [nominal, setNominal] = useState("");
   const [kategori, setKategori] = useState<"rutin" | "insidental">("rutin");
 
+  // State Drag Modal
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startYRef = useRef(0);
+
+  // Drag Gesture Handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startYRef.current = e.touches[0].clientY;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - startYRef.current;
+
+    // Hanya izinkan drag ke bawah (deltaY > 0)
+    if (deltaY > 0) {
+      setDragY(deltaY);
+    }
+  };
+
+  const handleTouchEnd = (onClose: () => void) => {
+    setIsDragging(false);
+    // Jika diseret ke bawah lebih dari 100px, tutup modal
+    if (dragY > 100) {
+      onClose();
+    }
+    setDragY(0);
+  };
+
   // Handler Buka / Tutup Modal dengan Animasi
   const openModalTransaksiHandler = () => {
+    setDragY(0);
     setShowModalTransaksi(true);
     setTimeout(() => setAnimateTransaksi(true), 10);
   };
 
   const closeModalTransaksiHandler = () => {
     setAnimateTransaksi(false);
-    setTimeout(() => setShowModalTransaksi(false), 300);
+    setTimeout(() => {
+      setShowModalTransaksi(false);
+      setDragY(0);
+    }, 300);
   };
 
   const openModalPengeluaranHandler = () => {
+    setDragY(0);
     setShowModalPengeluaran(true);
     setTimeout(() => setAnimatePengeluaran(true), 10);
   };
 
   const closeModalPengeluaranHandler = () => {
     setAnimatePengeluaran(false);
-    setTimeout(() => setShowModalPengeluaran(false), 300);
+    setTimeout(() => {
+      setShowModalPengeluaran(false);
+      setDragY(0);
+    }, 300);
   };
 
   const fetchData = useCallback(async () => {
@@ -384,7 +423,7 @@ export default function TransaksiPage() {
       <div className="bg-white rounded-[30px] p-1.5 flex items-center h-14 mb-5">
         <button
           onClick={() => switchTab("transaksi")}
-          className={`w-1/2 h-full rounded-[24px] font-bold text-sm transition-all ${
+          className={`w-1/2 h-full rounded-[24px] font-semibold text-sm transition-all ${
             tab === "transaksi" ? "bg-black text-white" : "text-gray-400"
           }`}
         >
@@ -392,7 +431,7 @@ export default function TransaksiPage() {
         </button>
         <button
           onClick={() => switchTab("pengeluaran")}
-          className={`w-1/2 h-full rounded-[24px] font-bold text-sm transition-all ${
+          className={`w-1/2 h-full rounded-[24px] font-semibold text-sm transition-all ${
             tab === "pengeluaran" ? "bg-[#DC2626] text-white" : "text-gray-400"
           }`}
         >
@@ -403,7 +442,7 @@ export default function TransaksiPage() {
       {/* Main Container Card */}
       <div className="bg-white rounded-[30px] p-5 min-h-[440px] relative">
         <div className="flex justify-between items-center mb-3">
-          <h2 className="text-sm font-bold text-[#111111]">
+          <h2 className="text-sm font-semibold text-[#494949]">
             {tab === "transaksi" ? "Riwayat Transaksi" : "Riwayat Pengeluaran"}
           </h2>
         </div>
@@ -437,16 +476,16 @@ export default function TransaksiPage() {
                     />
                   )}
                   <div className="flex flex-col">
-                    <span className="text-[13px] font-semibold text-gray-800 line-clamp-1">
+                    <span className="text-[13px] font-medium text-gray-800 line-clamp-1">
                       {trx.transaksi_item
                         .map((i) => i.nama_katalog_snapshot)
                         .join(", ")}
                     </span>
                     <div className="flex items-start gap-0.5 mt-0.5">
-                      <span className="text-[9px] font-bold text-[#16A34A]">
+                      <span className="text-[9px] font-medium text-[#16A34A]">
                         Rp
                       </span>
-                      <span className="text-[13px] font-bold text-[#16A34A] leading-none">
+                      <span className="text-[13px] font-medium text-[#16A34A] leading-none">
                         {trx.total.toLocaleString("id-ID")}
                       </span>
                     </div>
@@ -457,7 +496,7 @@ export default function TransaksiPage() {
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-[12px] font-bold text-gray-700 block">
+                  <span className="text-[12px] font-medium text-gray-700 block">
                     {trx.barbers?.nama ?? "-"}
                   </span>
                   <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
@@ -559,10 +598,24 @@ export default function TransaksiPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 max-h-[85vh] overflow-y-auto transform transition-transform duration-300 ease-out ${
-              animateTransaksi ? "translate-y-0" : "translate-y-full"
-            }`}
+            style={{
+              transform: animateTransaksi
+                ? `translateY(${dragY}px)`
+                : "translateY(100%)",
+              transition: isDragging ? "none" : "transform 0.3s ease-out",
+            }}
+            className="w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-3 pb-8 max-h-[85vh] overflow-y-auto select-none"
           >
+            {/* Grab Bar / Drag Handle */}
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={() => handleTouchEnd(closeModalTransaksiHandler)}
+              className="w-full pt-1 pb-4 flex justify-center items-center cursor-grab active:cursor-grabbing touch-none"
+            >
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </div>
+
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-bold text-[#111111]">
                 Tambah Transaksi
@@ -614,7 +667,7 @@ export default function TransaksiPage() {
                   onClick={() => setMetodeBayar("qris")}
                   className={`h-10 rounded-[14px] font-bold text-xs transition-all ${
                     metodeBayar === "qris"
-                      ? "bg-[#3138E8] text-white"
+                      ? "bg-[#BEF264] text-black"
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
@@ -758,10 +811,24 @@ export default function TransaksiPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 transform transition-transform duration-300 ease-out ${
-              animatePengeluaran ? "translate-y-0" : "translate-y-full"
-            }`}
+            style={{
+              transform: animatePengeluaran
+                ? `translateY(${dragY}px)`
+                : "translateY(100%)",
+              transition: isDragging ? "none" : "transform 0.3s ease-out",
+            }}
+            className="w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-3 pb-8 select-none"
           >
+            {/* Grab Bar / Drag Handle */}
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={() => handleTouchEnd(closeModalPengeluaranHandler)}
+              className="w-full pt-1 pb-4 flex justify-center items-center cursor-grab active:cursor-grabbing touch-none"
+            >
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </div>
+
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-bold text-[#111111]">
                 Tambah Pengeluaran

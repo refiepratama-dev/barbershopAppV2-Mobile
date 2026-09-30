@@ -346,7 +346,7 @@ export default function ProfilPage() {
       </section>
 
       <p className="text-center text-[11px] text-gray-400 pt-1">
-        BarberPOS v1.0.0
+        RafelPOS v1.1.0
       </p>
 
       {/* Modal Checklist Barber */}
