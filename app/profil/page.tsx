@@ -170,23 +170,23 @@ export default function ProfilPage() {
 
   if (loading) {
     return (
-      <div className="w-full py-20 text-center text-sm text-gray-400">
+      <div className="w-full py-24 text-center text-base text-zinc-500">
         Memuat profil...
       </div>
     );
   }
 
   return (
-    <div className="w-full font-sans pb-32">
-      <header className="flex items-center justify-between mb-5">
-        <h1 className="text-2xl font-bold text-black tracking-tight">
+    <div className="w-full font-sans pb-28 pt-2 px-1">
+      <header className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">
           Profile
         </h1>
       </header>
 
       {/* Hero Card */}
-      <section className="bg-white rounded-[30px] p-3.5 flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 font-bold text-sm">
+      <section className="bg-white rounded-[30px] p-4 flex items-center gap-4 mb-6 shadow-sm border border-zinc-100">
+        <div className="w-12 h-12 rounded-full bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 font-bold text-base">
           {kasir.nama
             ? kasir.nama
                 .split(" ")
@@ -195,45 +195,45 @@ export default function ProfilPage() {
             : "-"}
         </div>
         <div>
-          <h2 className="text-sm font-bold text-black tracking-tight block">
+          <h2 className="text-base font-bold text-zinc-900 tracking-tight block">
             {kasir.nama || "Memuat..."}
           </h2>
-          <p className="text-xs text-gray-400 font-medium mt-0.5">
+          <p className="text-xs text-zinc-500 font-medium mt-1">
             {kasir.role || "-"}
           </p>
         </div>
       </section>
 
       {/* Status Toko / Aksi Shift */}
-      <h2 className="text-[14px] font-bold text-black mb-2.5">
+      <h2 className="text-base font-bold text-zinc-900 mb-3 px-1">
         Pengaturan Toko
       </h2>
-      <section className="mb-4">
+      <section className="mb-6">
         {/* Jika Belum Dibuka atau Tutup Sementara -> Tombol untuk Buka Toko */}
         {(shiftStatus === "belum_dibuka" ||
           shiftStatus === "tutup_sementara") && (
           <button
             onClick={openModalBarber}
-            className="w-full bg-white rounded-[24px] p-3.5 flex items-center justify-between text-left mb-2"
+            className="w-full bg-white rounded-[24px] p-4 flex items-center justify-between text-left mb-3 shadow-sm border border-zinc-100"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-blue-50 text-[#3138E8] flex items-center justify-center shrink-0">
-                <Store size={16} />
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <Store size={18} />
               </div>
               <div>
-                <span className="text-[13px] font-bold text-gray-800 block">
+                <span className="text-sm font-bold text-zinc-900 block">
                   {shiftStatus === "tutup_sementara"
                     ? "Buka Toko Lagi"
                     : "Buka Toko"}
                 </span>
-                <span className="text-[11px] font-medium text-gray-400 block">
+                <span className="text-xs font-medium text-zinc-500 block mt-0.5">
                   {shiftStatus === "tutup_sementara"
                     ? "Semua barber nonaktif sementara"
                     : "Mulai operasional hari ini"}
                 </span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400 shrink-0" />
+            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
           </button>
         )}
 
@@ -241,22 +241,22 @@ export default function ProfilPage() {
         {shiftStatus === "buka" && (
           <button
             onClick={openModalBarber}
-            className="w-full bg-white rounded-[30px] p-3.5 flex items-center justify-between text-left mb-2"
+            className="w-full bg-white rounded-[30px] p-4 flex items-center justify-between text-left mb-3 shadow-sm border border-zinc-100"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                <Store size={16} />
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
+                <Store size={18} />
               </div>
               <div>
-                <span className="text-[13px] font-bold text-gray-800 block">
+                <span className="text-sm font-bold text-zinc-900 block">
                   Kelola Barber Aktif
                 </span>
-                <span className="text-[11px] font-medium text-gray-400 block">
+                <span className="text-xs font-medium text-zinc-500 block mt-0.5">
                   Toko sedang buka • Atur barber
                 </span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400 shrink-0" />
+            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
           </button>
         )}
 
@@ -264,37 +264,37 @@ export default function ProfilPage() {
         {shiftStatus === "tutup_sementara" && (
           <button
             onClick={() => setShowModalNonaktifkan(true)}
-            className="w-full bg-white rounded-[30px] p-3.5 flex items-center justify-between text-left mb-2"
+            className="w-full bg-white rounded-[30px] p-4 flex items-center justify-between text-left mb-3 shadow-sm border border-zinc-100"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center shrink-0">
-                <LogOut size={16} />
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <LogOut size={18} />
               </div>
               <div>
-                <span className="text-[13px] font-bold text-red-600 block">
+                <span className="text-sm font-bold text-red-600 block">
                   Nonaktifkan Toko (Final)
                 </span>
-                <span className="text-[11px] font-medium text-gray-400 block">
+                <span className="text-xs font-medium text-zinc-500 block mt-0.5">
                   Akhiri hari ini secara permanen
                 </span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400 shrink-0" />
+            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
           </button>
         )}
 
         {/* Jika Sudah Tutup Total */}
         {shiftStatus === "tutup" && (
-          <div className="w-full bg-white rounded-[30px] p-3.5 flex items-center justify-between text-left">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                <Store size={16} />
+          <div className="w-full bg-white rounded-[30px] p-4 flex items-center justify-between text-left shadow-sm border border-zinc-100">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-500 flex items-center justify-center shrink-0">
+                <Store size={18} />
               </div>
               <div>
-                <span className="text-[13px] font-bold text-gray-800 block">
+                <span className="text-sm font-bold text-zinc-800 block">
                   Toko Sudah Ditutup
                 </span>
-                <span className="text-[11px] font-medium text-gray-400 block">
+                <span className="text-xs font-medium text-zinc-500 block mt-0.5">
                   Cek halaman Laporan untuk rekap
                 </span>
               </div>
@@ -305,67 +305,65 @@ export default function ProfilPage() {
 
       {/* Tutup Toko (Jika Status Buka) */}
       {shiftStatus === "buka" && (
-        <section className="mb-4">
+        <section className="mb-6">
           <button
             onClick={() => setShowModalTutupSementara(true)}
-            className="w-full bg-white rounded-[30px] p-3.5 flex items-center justify-between text-left"
+            className="w-full bg-white rounded-[30px] p-4 flex items-center justify-between text-left shadow-sm border border-zinc-100"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-slate-100 text-orange-500 flex items-center justify-center shrink-0">
-                <Store size={16} />
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <Store size={18} />
               </div>
               <div>
-                <span className="text-[13px] font-bold text-gray-800 block">
+                <span className="text-sm font-bold text-zinc-900 block">
                   Tutup Toko
                 </span>
-                <span className="text-[11px] font-medium text-gray-400 block">
+                <span className="text-xs font-medium text-zinc-500 block mt-0.5">
                   Akhiri operasional hari ini
                 </span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400 shrink-0" />
+            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
           </button>
         </section>
       )}
 
       {/* Sign Out Card */}
-      <section className="mb-4 mt-10">
+      <section className="mb-6 mt-8">
         <button
           onClick={handleSignOut}
-          className="w-full bg-white rounded-[30px] p-3.5 flex items-center justify-between text-left"
+          className="w-full bg-white rounded-[30px] p-4 flex items-center justify-between text-left shadow-sm border border-zinc-100"
         >
           <div>
-            <span className="text-[13px] font-bold text-gray-800 block">
+            <span className="text-sm font-bold text-zinc-900 block">
               Sign Out
             </span>
           </div>
-          <div className="p-2 px-4 rounded-[30px] bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-            <LogOut size={16} />
+          <div className="py-2 px-4 rounded-[30px] bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
+            <LogOut size={18} />
           </div>
         </button>
       </section>
 
-      <p className="text-center text-[11px] text-gray-400 pt-1">
-        RafelPOS v1.1.0
-      </p>
+      <p className="text-center text-xs text-zinc-400 pt-2">RafelPOS v1.1.0</p>
 
       {/* Modal Checklist Barber */}
       {showModalBarber && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-[420px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 max-h-[80vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-base text-black font-bold">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm p-0">
+          <div className="w-full max-w-[420px] bg-white rounded-t-[32px] px-6 pt-6 pb-8 max-h-[80vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg text-zinc-900 font-bold">
                 Barber Aktif Hari Ini
               </h3>
               <button
                 onClick={() => setShowModalBarber(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 flex items-center justify-center"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="flex flex-col gap-2 mb-5 text-black">
+            <div className="flex flex-col gap-2.5 mb-6 text-zinc-900">
               {barbers.map((b) => {
                 const checked = checkedMap[b.id] ?? false;
                 return (
@@ -377,14 +375,14 @@ export default function ProfilPage() {
                         [b.id]: !prev[b.id],
                       }))
                     }
-                    className="w-full flex items-center justify-between bg-gray-50 rounded-[18px] px-4 py-3"
+                    className="w-full flex items-center justify-between bg-zinc-50 rounded-[18px] px-4 py-3.5"
                   >
-                    <span className="text-sm font-bold">{b.nama}</span>
+                    <span className="text-sm font-semibold">{b.nama}</span>
                     <div
                       className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm ${
                         checked
-                          ? "bg-black text-white"
-                          : "bg-gray-200 text-transparent"
+                          ? "bg-zinc-900 text-white"
+                          : "bg-zinc-200 text-transparent"
                       }`}
                     >
                       <Check size={14} />
@@ -393,7 +391,7 @@ export default function ProfilPage() {
                 );
               })}
               {barbers.length === 0 && (
-                <p className="text-center text-sm text-gray-400 py-6">
+                <p className="text-center text-sm text-zinc-400 py-8">
                   Belum ada data barber
                 </p>
               )}
@@ -402,7 +400,7 @@ export default function ProfilPage() {
             <button
               onClick={handleConfirmBukaToko}
               disabled={saving}
-              className="w-full py-3.5 rounded-[20px] bg-[#3138E8] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
+              className="w-full py-4 rounded-[20px] bg-indigo-600 text-white font-bold text-sm disabled:opacity-50 active:scale-98 transition-transform shadow-md"
             >
               {saving ? "Menyimpan..." : "Konfirmasi"}
             </button>
@@ -412,13 +410,15 @@ export default function ProfilPage() {
 
       {/* Modal Konfirmasi Tutup Sementara */}
       {showModalTutupSementara && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-[420px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 animate-in slide-in-from-bottom duration-200">
-            <h3 className="text-black font-bold mb-2">Tutup Toko Sementara?</h3>
-            <p className="text-[13px] text-gray-500 mb-5 leading-relaxed">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm p-0">
+          <div className="w-full max-w-[420px] bg-white rounded-t-[32px] px-6 pt-6 pb-8 animate-in slide-in-from-bottom duration-200">
+            <h3 className="text-lg text-zinc-900 font-bold mb-2">
+              Tutup Toko Sementara?
+            </h3>
+            <p className="text-sm text-zinc-600 mb-6 leading-relaxed">
               Semua barber akan otomatis dinonaktifkan, dan
               transaksi/pengeluaran baru akan{" "}
-              <span className="font-bold text-gray-700">
+              <span className="font-bold text-zinc-800">
                 terkunci sementara
               </span>
               . Kamu masih bisa membuka toko lagi setelah ini kalau diperlukan.
@@ -426,14 +426,14 @@ export default function ProfilPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowModalTutupSementara(false)}
-                className="w-full py-3.5 rounded-[20px] bg-gray-100 text-gray-700 font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
+                className="w-full py-3.5 rounded-[20px] bg-zinc-100 text-zinc-800 font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
               >
                 Batal
               </button>
               <button
                 onClick={handleTutupSementara}
                 disabled={saving}
-                className="w-full py-3.5 rounded-[20px] bg-orange-500 text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
+                className="w-full py-3.5 rounded-[20px] bg-amber-500 text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
               >
                 {saving ? "Memproses..." : "Ya, Tutup Sementara"}
               </button>
@@ -444,14 +444,14 @@ export default function ProfilPage() {
 
       {/* Modal Konfirmasi Nonaktifkan Toko */}
       {showModalNonaktifkan && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-[420px] bg-white rounded-t-[32px] px-6 pt-5 pb-8 animate-in slide-in-from-bottom duration-200">
-            <h3 className="text-base font-bold mb-2 text-red-600">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm p-0">
+          <div className="w-full max-w-[420px] bg-white rounded-t-[32px] px-6 pt-6 pb-8 animate-in slide-in-from-bottom duration-200">
+            <h3 className="text-lg font-bold mb-2 text-red-600">
               Nonaktifkan Toko Hari Ini?
             </h3>
-            <p className="text-[13px] text-gray-500 mb-5 leading-relaxed">
+            <p className="text-sm text-zinc-600 mb-6 leading-relaxed">
               Tindakan ini{" "}
-              <span className="font-bold text-gray-700">
+              <span className="font-bold text-zinc-800">
                 tidak bisa dibatalkan
               </span>
               . Semua transaksi & pengeluaran hari ini akan terkunci permanen,
@@ -460,7 +460,7 @@ export default function ProfilPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowModalNonaktifkan(false)}
-                className="w-full py-3.5 rounded-[20px] bg-gray-100 text-gray-700 font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
+                className="w-full py-3.5 rounded-[20px] bg-zinc-100 text-zinc-800 font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform shadow-md"
               >
                 Batal
               </button>
