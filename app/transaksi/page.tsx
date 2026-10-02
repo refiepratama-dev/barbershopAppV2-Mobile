@@ -420,10 +420,10 @@ export default function TransaksiPage() {
   return (
     <div className="w-full font-sans pb-28">
       {/* Segmented Switcher */}
-      <div className="bg-white rounded-[30px] p-1.5 flex items-center h-14 mb-5">
+      <div className="bg-white rounded-[30px] p-1.5 flex items-center h-14 mb-5 shadow">
         <button
           onClick={() => switchTab("transaksi")}
-          className={`w-1/2 h-full rounded-[24px] font-semibold text-sm transition-all ${
+          className={`w-1/2 h-full rounded-[24px] font-semibold text-sm transition-all shadow ${
             tab === "transaksi" ? "bg-black text-white" : "text-gray-400"
           }`}
         >
@@ -431,7 +431,7 @@ export default function TransaksiPage() {
         </button>
         <button
           onClick={() => switchTab("pengeluaran")}
-          className={`w-1/2 h-full rounded-[24px] font-semibold text-sm transition-all ${
+          className={`w-1/2 h-full rounded-[24px] font-semibold text-sm transition-all shadow ${
             tab === "pengeluaran" ? "bg-[#DC2626] text-white" : "text-gray-400"
           }`}
         >
@@ -440,7 +440,7 @@ export default function TransaksiPage() {
       </div>
 
       {/* Main Container Card */}
-      <div className="bg-white rounded-[30px] p-5 min-h-[440px] relative">
+      <div className="bg-white rounded-[30px] p-5 min-h-[440px] relative shadow">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-sm font-semibold text-[#494949]">
             {tab === "transaksi" ? "Riwayat Transaksi" : "Riwayat Pengeluaran"}
@@ -458,7 +458,7 @@ export default function TransaksiPage() {
           <div className="flex flex-col divide-y divide-gray-100">
             {transaksiList.length === 0 && (
               <p className="text-center text-gray-400 text-xs py-12 font-medium">
-                Belum ada transaksi recorded
+                Belum ada transaksi tercatat
               </p>
             )}
             {transaksiList.map((trx) => (
@@ -513,7 +513,7 @@ export default function TransaksiPage() {
           <div className="flex flex-col divide-y divide-gray-100">
             {pengeluaranList.length === 0 && (
               <p className="text-center text-gray-400 text-xs py-12 font-medium">
-                Belum ada pengeluaran recorded
+                Belum ada pengeluaran tercatat
               </p>
             )}
             {pengeluaranList.map((p) => (
@@ -564,8 +564,10 @@ export default function TransaksiPage() {
         <div className="w-full max-w-[425px] relative px-8 flex items-center justify-center h-16">
           <button
             onClick={handleFabClick}
-            className={`pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-              isEditMode ? "bg-[#DC2626] text-white" : "bg-white text-black"
+            className={`pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
+              isEditMode
+                ? "bg-[#DC2626] text-white"
+                : "bg-white text-black shadow-lg"
             }`}
           >
             {isEditMode ? <Trash2 size={22} /> : <Plus size={26} />}
@@ -576,7 +578,7 @@ export default function TransaksiPage() {
               onClick={() =>
                 isEditMode ? exitEditMode() : setIsEditMode(true)
               }
-              className={`pointer-events-auto absolute right-8 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+              className={`pointer-events-auto absolute right-8 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
                 isEditMode
                   ? "bg-red-100 text-red-600 border border-red-200"
                   : "bg-white text-gray-600 border border-gray-100"

@@ -254,7 +254,7 @@ export default function BerandaPage() {
   return (
     <div className="w-full font-sans">
       {/* Header Profile */}
-      <div className="flex justify-between items-center mb-5">
+      <div className="flex justify-between items-center mb-2">
         <div>
           <h1 className="text-2xl font-bold text-[#111111] tracking-tight">
             Hai, {kasir.nama || "..."}

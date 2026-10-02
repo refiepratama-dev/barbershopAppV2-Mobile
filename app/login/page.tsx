@@ -40,16 +40,23 @@ export default function LoginPage() {
   }
 
   return (
-    // fixed inset-0 z-[9999] h-screen overflow-hidden memastikan halaman mengunci penuh layar & menutupi navbar bawaan
     <div
       className="fixed inset-0 z-[9999] w-full h-screen overflow-hidden flex items-center justify-center px-6 font-sans select-none"
       style={{ backgroundColor: "#EFEFEF" }}
     >
-      <div className="w-full max-w-[380px] bg-white rounded-[30px] shadow-sm p-6">
-        <h1 className="text-2xl font-bold text-[#111111] mb-1">Masuk</h1>
-        <p className="text-xs text-gray-400 mb-6">Rafel Pangkas Rambut</p>
+      <section className="w-full max-w-[380px] mb-3 rounded-[30px] bg-white p-3 border border-gray-100 shadow">
+        {/* Header Card Tanpa Shape Gradient */}
+        <div className="text-center pt-3 pb-2">
+          <h1 className="text-2xl font-bold text-[#111111] leading-tight">
+            Sign In
+          </h1>
+          <p className="text-xs font-medium text-gray-400 mt-0.5">
+            Rafel Pangkas Rambut
+          </p>
+        </div>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4 mb-5">
+        {/* Form Login */}
+        <form onSubmit={handleLogin} className="flex flex-col gap-4 p-2">
           <div>
             <label className="block text-xs font-bold text-gray-600 mb-1.5">
               Email
@@ -58,7 +65,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="kasir@barbershop.com"
+              placeholder="Masukan email anda"
               autoFocus
               autoComplete="email"
               className="w-full h-11 rounded-[16px] bg-gray-100 px-4 text-sm text-black outline-none focus:ring-2 focus:ring-[#3138E8]/20 transition-all"
@@ -74,7 +81,7 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Masukan password anda"
                 autoComplete="current-password"
                 className="w-full h-11 rounded-[16px] bg-gray-100 text-black pl-4 pr-11 text-sm outline-none focus:ring-2 focus:ring-[#3138E8]/20 transition-all"
               />
@@ -95,10 +102,10 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3.5 mt-2 rounded-full bg-[#3138E8] text-white font-bold text-sm disabled:opacity-50 active:scale-98 transition-all shadow-md"
           >
-            {loading ? "Memproses..." : "Masuk"}
+            {loading ? "Logging In..." : "Masuk"}
           </button>
         </form>
-      </div>
+      </section>
     </div>
   );
 }
