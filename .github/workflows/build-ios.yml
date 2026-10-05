@@ -23,22 +23,17 @@ jobs:
 
       - name: Build Next.js App
         env:
-          NEXT_PUBLIC_SUPABASE_URL: "https://your-supabase-project.supabase.co"
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: "your-actual-supabase-anon-key"
+          NEXT_PUBLIC_SUPABASE_URL: https://ivfsfrlgocxwezcawiby.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2ZnNmcmxnb2N4d2V6Y2F3aWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MDUxODIsImV4cCI6MjEwNDk4MTE4Mn0.C2r8swFt6az7g8yC46OfRaseasPFZnYMLPx7ZNMqrIM
         run: npm run build
 
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      - name: Install CocoaPods
-        run: |
-          cd ios/App
-          pod install
-
       - name: Build iOS Xcode App
         run: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator clean build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -workspace App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator clean build CODE_SIGNING_ALLOWED=NO
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
