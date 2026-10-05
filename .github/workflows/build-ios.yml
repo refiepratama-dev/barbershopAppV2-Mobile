@@ -30,15 +30,10 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      - name: Install CocoaPods
-        run: |
-          cd ios/App
-          pod install
-
       - name: Build iOS Xcode App
         run: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator clean build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator clean build CODE_SIGNING_ALLOWED=NO
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
