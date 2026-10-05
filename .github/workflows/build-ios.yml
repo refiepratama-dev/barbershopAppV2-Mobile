@@ -30,20 +30,18 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      - name: Install CocoaPods & Build Xcode App
+      - name: Install CocoaPods
         run: |
-          # Cari folder tempat Podfile berada secara otomatis
-          PODFILE_DIR=$(dirname $(find ios -name "Podfile" | head -n 1))
-          echo "Podfile ditemukan di folder: $PODFILE_DIR"
-          
-          cd "$PODFILE_DIR"
+          cd ios/App
           pod install
-          
-          # Jalankan build xcode
+
+      - name: Build iOS Xcode App
+        run: |
+          cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator clean build CODE_SIGNING_ALLOWED=NO
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-app-build
-          path: ios/
+          path: ios/App/build/Release-iphonesimulator/
