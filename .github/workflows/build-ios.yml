@@ -33,7 +33,7 @@ jobs:
       - name: Build iOS Xcode App
         run: |
           cd ios/App
-          xcodebuild -workspace App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator clean build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator clean build CODE_SIGNING_ALLOWED=NO
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
