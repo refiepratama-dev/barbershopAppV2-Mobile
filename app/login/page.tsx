@@ -100,7 +100,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 mt-2 rounded-full bg-[#3138E8] text-white font-bold text-sm disabled:opacity-50 active:scale-98 transition-all shadow-md"
+            className="w-full py-3.5 mt-2 rounded-full bg-[#3138E8] text-white font-bold text-sm disabled:opacity-50 active:scale-98 transition-all shadow"
           >
             {loading ? "Logging In..." : "Masuk"}
           </button>
