@@ -33,10 +33,10 @@ jobs:
       - name: Build iOS Xcode App
         run: |
           cd ios/App
-          xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator clean build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build clean build CODE_SIGNING_ALLOWED=NO
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-app-build
-          path: ios/App/build/Release-iphonesimulator/
+          path: ios/App/build/Build/Products/Debug-iphonesimulator/
