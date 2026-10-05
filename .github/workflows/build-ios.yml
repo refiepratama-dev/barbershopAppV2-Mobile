@@ -30,13 +30,20 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      - name: Build iOS Xcode App
+      - name: Build iOS App for iPhone Device
         run: |
           cd ios/App
-          xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build clean build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release -sdk iphoneos -derivedDataPath build clean build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
-      - name: Upload Artifact
+      - name: Create .ipa Package
+        run: |
+          cd ios/App/build/Build/Products/Release-iphoneos
+          mkdir Payload
+          cp -r App.app Payload/
+          zip -r App.ipa Payload
+
+      - name: Upload Artifact (.ipa File)
         uses: actions/upload-artifact@v4
         with:
-          name: ios-app-build
-          path: ios/App/build/Build/Products/Debug-iphonesimulator/
+          name: ios-ipa-package
+          path: ios/App/build/Build/Products/Release-iphoneos/App.ipa
