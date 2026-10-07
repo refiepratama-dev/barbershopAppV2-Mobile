@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -41,70 +42,103 @@ export default function LoginPage() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] w-full h-screen overflow-hidden flex items-center justify-center px-6 font-sans select-none"
-      style={{ backgroundColor: "#EFEFEF" }}
+      className="
+        fixed inset-0 z-[9999]
+        min-h-screen w-full
+        overflow-hidden
+        flex items-start justify-center
+        px-6 pt-[80px]
+        font-sans select-none
+        bg-no-repeat
+      "
+      style={{
+        backgroundImage: "url('/login-bg.svg')",
+        backgroundSize: "100% auto",
+        backgroundPosition: "center bottom",
+        backgroundColor: "#EFEFEF",
+      }}
     >
-      <section className="w-full max-w-[380px] mb-3 rounded-[30px] bg-white p-3 border border-gray-100 shadow">
-        {/* Header Card Tanpa Shape Gradient */}
-        <div className="text-center pt-3 pb-2">
-          <h1 className="text-2xl font-bold text-[#111111] leading-tight">
-            Sign In
+      <section className="w-full max-w-[380px] rounded-[30px] bg-white/90 backdrop-blur-sm p-3 border border-white/70">
+        {/* Header di luar inner card */}
+        <div className="text-center pt-2 pb-3">
+          {/* Tempat untuk Logo SVG */}
+          <div className="flex justify-center">
+            <img
+              src="/logo.svg" // Sesuaikan dengan path file logo SVG Anda
+              alt="Logo Rafel Pangkas Rambut"
+              className="w-auto h-15 object-contain"
+            />
+          </div>
+
+          <h1 className="text-2xl font-bold text-[#494949] leading-tight">
+            Welcome Back!
           </h1>
+
           <p className="text-xs font-medium text-gray-400 mt-0.5">
             Rafel Pangkas Rambut
           </p>
         </div>
 
-        {/* Form Login */}
-        <form onSubmit={handleLogin} className="flex flex-col gap-4 p-2">
-          <div>
-            <label className="block text-xs font-bold text-gray-600 mb-1.5">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Masukan email anda"
-              autoFocus
-              autoComplete="email"
-              className="w-full h-11 rounded-[16px] bg-gray-100 px-4 text-sm text-black outline-none focus:ring-2 focus:ring-[#3138E8]/20 transition-all"
-            />
-          </div>
+        {/* Inner Card (Struktur mirip card metode pembayaran) */}
+        <div className="rounded-[20px] bg-slate-100 p-3 shadow">
+          {/* Form Login */}
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1.5">
+                Email
+              </label>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-600 mb-1.5">
-              Password
-            </label>
-            <div className="relative flex items-center">
               <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Masukan password anda"
-                autoComplete="current-password"
-                className="w-full h-11 rounded-[16px] bg-gray-100 text-black pl-4 pr-11 text-sm outline-none focus:ring-2 focus:ring-[#3138E8]/20 transition-all"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Masukan email anda"
+                autoFocus
+                autoComplete="email"
+                className="w-full h-11 rounded-[16px] bg-white px-4 text-sm text-black outline-none"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
-          </div>
 
-          {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1.5">
+                Password
+              </label>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 mt-2 rounded-full bg-[#3138E8] text-white font-bold text-sm disabled:opacity-50 active:scale-98 transition-all shadow"
-          >
-            {loading ? "Logging In..." : "Masuk"}
-          </button>
-        </form>
+              <div className="relative flex items-center">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Masukan password anda"
+                  autoComplete="current-password"
+                  className="w-full h-11 rounded-[16px] bg-white text-black pl-4 pr-11 text-sm outline-none focus:ring-2 focus:ring-[#3138E8]/20 transition-all"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+
+            {/* Button Login */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 mt-2 rounded-full bg-black text-white font-bold text-sm disabled:opacity-50 active:scale-[0.98] transition-all"
+            >
+              {loading ? "Logging In..." : "Masuk"}
+            </button>
+          </form>
+        </div>
       </section>
     </div>
   );

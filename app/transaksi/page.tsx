@@ -44,6 +44,10 @@ export default function TransaksiPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Ref Scroll Modal
+  const modalTransaksiRef = useRef<HTMLDivElement>(null);
+  const modalPengeluaranRef = useRef<HTMLDivElement>(null);
+
   // State Modal Tambah Transaksi
   const [showModalTransaksi, setShowModalTransaksi] = useState(false);
   const [animateTransaksi, setAnimateTransaksi] = useState(false);
@@ -79,7 +83,6 @@ export default function TransaksiPage() {
     const currentY = e.touches[0].clientY;
     const deltaY = currentY - startYRef.current;
 
-    // Hanya izinkan drag ke bawah (deltaY > 0)
     if (deltaY > 0) {
       setDragY(deltaY);
     }
@@ -87,18 +90,22 @@ export default function TransaksiPage() {
 
   const handleTouchEnd = (onClose: () => void) => {
     setIsDragging(false);
-    // Jika diseret ke bawah lebih dari 100px, tutup modal
     if (dragY > 100) {
       onClose();
     }
     setDragY(0);
   };
 
-  // Handler Buka / Tutup Modal dengan Animasi
+  // Handler Buka / Tutup Modal dengan Auto Reset Scroll
   const openModalTransaksiHandler = () => {
     setDragY(0);
     setShowModalTransaksi(true);
-    setTimeout(() => setAnimateTransaksi(true), 10);
+    setTimeout(() => {
+      setAnimateTransaksi(true);
+      if (modalTransaksiRef.current) {
+        modalTransaksiRef.current.scrollTop = 0;
+      }
+    }, 10);
   };
 
   const closeModalTransaksiHandler = () => {
@@ -112,7 +119,12 @@ export default function TransaksiPage() {
   const openModalPengeluaranHandler = () => {
     setDragY(0);
     setShowModalPengeluaran(true);
-    setTimeout(() => setAnimatePengeluaran(true), 10);
+    setTimeout(() => {
+      setAnimatePengeluaran(true);
+      if (modalPengeluaranRef.current) {
+        modalPengeluaranRef.current.scrollTop = 0;
+      }
+    }, 10);
   };
 
   const closeModalPengeluaranHandler = () => {
@@ -230,12 +242,10 @@ export default function TransaksiPage() {
     }
 
     const table = tab === "transaksi" ? "transaksi" : "pengeluaran";
-    const { error, count } = await supabase
+    const { error } = await supabase
       .from(table)
       .delete({ count: "exact" })
       .in("id", selectedIds);
-
-    console.log("DELETE result:", { error, count, selectedIds, table });
 
     if (error) {
       alert("Gagal menghapus: " + error.message);
@@ -440,123 +450,123 @@ export default function TransaksiPage() {
       </div>
 
       {/* Main Container Card */}
-      <div className="bg-white rounded-[30px] p-5 min-h-[440px] relative shadow">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-sm font-semibold text-[#494949]">
-            {tab === "transaksi" ? "Riwayat Transaksi" : "Riwayat Pengeluaran"}
-          </h2>
+      <div className="bg-white rounded-[30px] p-3 border border-gray-100">
+        <h2 className="px-2 pb-2 text-sm font-semibold text-[#494949]">
+          {tab === "transaksi" ? "Riwayat Transaksi" : "Riwayat Pengeluaran"}
+        </h2>
+
+        <div className="rounded-[20px] bg-slate-100 p-3 min-h-[380px] shadow">
+          {loading && (
+            <p className="text-center text-gray-400 text-xs py-12 font-medium">
+              Memuat data...
+            </p>
+          )}
+
+          {/* List Transaksi */}
+          {!loading && tab === "transaksi" && (
+            <div className="flex flex-col divide-y divide-gray-200/60">
+              {transaksiList.length === 0 && (
+                <p className="text-center text-gray-400 text-xs py-12 font-medium">
+                  Belum ada transaksi tercatat
+                </p>
+              )}
+              {transaksiList.map((trx) => (
+                <div
+                  key={trx.id}
+                  className="py-3 flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-3">
+                    {isEditMode && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(trx.id)}
+                        onChange={() => toggleSelect(trx.id)}
+                        className="w-4 h-4 rounded accent-[#3138E8]"
+                      />
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-[13px] font-medium text-gray-800 line-clamp-1">
+                        {trx.transaksi_item
+                          .map((i) => i.nama_katalog_snapshot)
+                          .join(", ")}
+                      </span>
+                      <div className="flex items-start gap-0.5 mt-0.5">
+                        <span className="text-[9px] font-medium text-[#16A34A]">
+                          Rp
+                        </span>
+                        <span className="text-[13px] font-medium text-[#16A34A] leading-none">
+                          {trx.total.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 mt-1">
+                        {formatJam(trx.created_at)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className="text-[12px] font-medium text-gray-700 block">
+                      {trx.barbers?.nama ?? "-"}
+                    </span>
+                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      {trx.metode_bayar}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* List Pengeluaran */}
+          {!loading && tab === "pengeluaran" && (
+            <div className="flex flex-col divide-y divide-gray-200/60">
+              {pengeluaranList.length === 0 && (
+                <p className="text-center text-gray-400 text-xs py-12 font-medium">
+                  Belum ada pengeluaran tercatat
+                </p>
+              )}
+              {pengeluaranList.map((p) => (
+                <div
+                  key={p.id}
+                  className="py-3 flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-3">
+                    {isEditMode && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(p.id)}
+                        onChange={() => toggleSelect(p.id)}
+                        className="w-4 h-4 rounded accent-[#3138E8]"
+                      />
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-[13px] font-semibold text-gray-800 line-clamp-1">
+                        {p.keterangan || "-"}
+                      </span>
+                      <div className="flex items-start gap-0.5 mt-0.5">
+                        <span className="text-[9px] font-bold text-[#DC2626]">
+                          Rp
+                        </span>
+                        <span className="text-[13px] font-bold text-[#DC2626] leading-none">
+                          {p.nominal.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 mt-1">
+                        {formatJam(p.created_at)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 max-w-[120px]">
+                    <span className="text-[11px] font-medium text-gray-500 block capitalize truncate">
+                      {p.kategori}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-
-        {loading && (
-          <p className="text-center text-gray-400 text-xs py-12 font-medium">
-            Memuat data...
-          </p>
-        )}
-
-        {/* List Transaksi */}
-        {!loading && tab === "transaksi" && (
-          <div className="flex flex-col divide-y divide-gray-100">
-            {transaksiList.length === 0 && (
-              <p className="text-center text-gray-400 text-xs py-12 font-medium">
-                Belum ada transaksi tercatat
-              </p>
-            )}
-            {transaksiList.map((trx) => (
-              <div
-                key={trx.id}
-                className="py-3.5 flex items-center justify-between gap-2"
-              >
-                <div className="flex items-center gap-3">
-                  {isEditMode && (
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(trx.id)}
-                      onChange={() => toggleSelect(trx.id)}
-                      className="w-4 h-4 rounded accent-white"
-                    />
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-[13px] font-medium text-gray-800 line-clamp-1">
-                      {trx.transaksi_item
-                        .map((i) => i.nama_katalog_snapshot)
-                        .join(", ")}
-                    </span>
-                    <div className="flex items-start gap-0.5 mt-0.5">
-                      <span className="text-[9px] font-medium text-[#16A34A]">
-                        Rp
-                      </span>
-                      <span className="text-[13px] font-medium text-[#16A34A] leading-none">
-                        {trx.total.toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-gray-400 mt-1">
-                      {formatJam(trx.created_at)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span className="text-[12px] font-medium text-gray-700 block">
-                    {trx.barbers?.nama ?? "-"}
-                  </span>
-                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                    {trx.metode_bayar}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* List Pengeluaran */}
-        {!loading && tab === "pengeluaran" && (
-          <div className="flex flex-col divide-y divide-gray-100">
-            {pengeluaranList.length === 0 && (
-              <p className="text-center text-gray-400 text-xs py-12 font-medium">
-                Belum ada pengeluaran tercatat
-              </p>
-            )}
-            {pengeluaranList.map((p) => (
-              <div
-                key={p.id}
-                className="py-3.5 flex items-center justify-between gap-2"
-              >
-                <div className="flex items-center gap-3">
-                  {isEditMode && (
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(p.id)}
-                      onChange={() => toggleSelect(p.id)}
-                      className="w-4 h-4 rounded accent-white"
-                    />
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-[13px] font-semibold text-gray-800 line-clamp-1">
-                      {p.keterangan || "-"}
-                    </span>
-                    <div className="flex items-start gap-0.5 mt-0.5">
-                      <span className="text-[9px] font-bold text-[#DC2626]">
-                        Rp
-                      </span>
-                      <span className="text-[13px] font-bold text-[#DC2626] leading-none">
-                        {p.nominal.toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-gray-400 mt-1">
-                      {formatJam(p.created_at)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0 max-w-[120px]">
-                  <span className="text-[11px] font-medium text-gray-500 block capitalize truncate">
-                    {p.kategori}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Floating Action Buttons Area */}
@@ -606,199 +616,207 @@ export default function TransaksiPage() {
                 : "translateY(100%)",
               transition: isDragging ? "none" : "transform 0.3s ease-out",
             }}
-            className="w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-3 pb-8 max-h-[85vh] overflow-y-auto select-none"
+            className="w-full max-w-[425px] bg-white rounded-t-[32px] max-h-[85vh] flex flex-col overflow-hidden select-none"
           >
-            {/* Grab Bar / Drag Handle */}
-            <div
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={() => handleTouchEnd(closeModalTransaksiHandler)}
-              className="w-full pt-1 pb-4 flex justify-center items-center cursor-grab active:cursor-grabbing touch-none"
-            >
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            {/* Header Modal (Fixed / Sticky - Garis Penarik + Title) */}
+            <div className="shrink-0 px-6 pt-3 pb-2 bg-white border-b border-gray-100">
+              <div
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={() => handleTouchEnd(closeModalTransaksiHandler)}
+                className="w-full pt-1 pb-3 flex justify-center items-center cursor-grab active:cursor-grabbing touch-none"
+              >
+                <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+              </div>
+
+              <div className="flex justify-between items-center pb-1">
+                <h3 className="text-base font-bold text-[#111111]">
+                  Tambah Transaksi
+                </h3>
+                <button
+                  onClick={closeModalTransaksiHandler}
+                  className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-base font-bold text-[#111111]">
-                Tambah Transaksi
-              </h3>
+            {/* Scrollable Body Modal */}
+            <div
+              ref={modalTransaksiRef}
+              className="px-6 pt-4 pb-8 overflow-y-auto flex-1"
+            >
+              <div className="mb-4">
+                <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
+                  Pilih Barber
+                </label>
+                <select
+                  value={selectedBarberId}
+                  onChange={(e) => setSelectedBarberId(e.target.value)}
+                  className="w-full h-11 rounded-[16px] bg-gray-100 px-4 text-xs font-semibold text-gray-800 outline-none"
+                >
+                  <option value="">-- Pilih Barber --</option>
+                  {barbers.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.nama}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
+                  Metode Pembayaran
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setMetodeBayar("cash")}
+                    className={`h-10 rounded-[14px] font-bold text-xs transition-all ${
+                      metodeBayar === "cash"
+                        ? "bg-[#3138E8] text-white"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    Cash
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMetodeBayar("qris")}
+                    className={`h-10 rounded-[14px] font-bold text-xs transition-all ${
+                      metodeBayar === "qris"
+                        ? "bg-[#BEF264] text-black"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    QRIS
+                  </button>
+                </div>
+              </div>
+
+              {/* Section Pilih Layanan & Produk */}
+              <div className="mb-5">
+                <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
+                  Layanan
+                </label>
+                <div className="flex flex-col gap-2 mb-4">
+                  {layananList
+                    .filter((l) => l.kategori === "layanan")
+                    .map((layanan) => {
+                      const qty = qtyMap[layanan.id] ?? 0;
+                      return (
+                        <div
+                          key={layanan.id}
+                          className="flex items-center justify-between bg-gray-50 rounded-[20px] px-4 py-2.5"
+                        >
+                          <div>
+                            <span className="text-sm font-medium text-gray-900 block">
+                              {layanan.nama}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              Rp {layanan.harga.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => changeQty(layanan.id, -1)}
+                              className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-700"
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <span className="w-4 text-center text-sm font-bold text-gray-900">
+                              {qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => changeQty(layanan.id, 1)}
+                              className="w-7 h-7 rounded-full bg-black flex items-center justify-center text-white"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
+                  Produk
+                </label>
+                <div className="flex flex-col gap-2 mb-4">
+                  {layananList
+                    .filter((l) => l.kategori === "produk")
+                    .map((produk) => {
+                      const qty = qtyMap[produk.id] ?? 0;
+                      return (
+                        <div
+                          key={produk.id}
+                          className="flex items-center justify-between bg-gray-50 rounded-[20px] px-4 py-2.5"
+                        >
+                          <div>
+                            <span className="text-sm font-medium text-gray-900 block">
+                              {produk.nama}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              Rp {produk.harga.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => changeQty(produk.id, -1)}
+                              className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-700"
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <span className="w-4 text-center text-sm font-bold text-gray-900">
+                              {qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => changeQty(produk.id, 1)}
+                              className="w-7 h-7 rounded-full bg-black flex items-center justify-center text-white"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {layananList.filter((l) => l.kategori === "produk").length ===
+                    0 && (
+                    <p className="text-xs text-gray-400 text-center py-3">
+                      Belum ada produk
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-3 border-t border-gray-100 mb-5 px-1">
+                <span className="block text-[13px] font-bold text-gray-900 mb-1.5">
+                  Total Transaksi
+                </span>
+                <div className="flex items-start gap-0.5">
+                  <span className="text-[10px] font-bold text-[#16A34A]">
+                    Rp
+                  </span>
+                  <span className="text-lg font-bold text-[#16A34A] leading-none">
+                    {totalTransaksi.toLocaleString("id-ID")}
+                  </span>
+                </div>
+              </div>
+
               <button
-                onClick={closeModalTransaksiHandler}
-                className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"
+                type="button"
+                onClick={handleConfirmTransaksi}
+                disabled={saving}
+                className="w-full py-3.5 rounded-[20px] bg-[#3138E8] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform"
               >
-                <X size={16} />
+                {saving ? "Menyimpan..." : "Simpan Transaksi"}
               </button>
             </div>
-
-            <div className="mb-4">
-              <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
-                Pilih Barber
-              </label>
-              <select
-                value={selectedBarberId}
-                onChange={(e) => setSelectedBarberId(e.target.value)}
-                className="w-full h-11 rounded-[16px] bg-gray-100 px-4 text-xs font-semibold text-gray-800 outline-none"
-              >
-                <option value="">-- Pilih Barber --</option>
-                {barbers.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.nama}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
-                Metode Pembayaran
-              </label>
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setMetodeBayar("cash")}
-                  className={`h-10 rounded-[14px] font-bold text-xs transition-all ${
-                    metodeBayar === "cash"
-                      ? "bg-[#3138E8] text-white"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  Cash
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMetodeBayar("qris")}
-                  className={`h-10 rounded-[14px] font-bold text-xs transition-all ${
-                    metodeBayar === "qris"
-                      ? "bg-[#BEF264] text-black"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  QRIS
-                </button>
-              </div>
-            </div>
-
-            {/* Section Pilih Layanan & Produk */}
-            <div className="mb-5">
-              {/* Section Layanan */}
-              <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
-                Layanan
-              </label>
-              <div className="flex flex-col gap-2 mb-4">
-                {layananList
-                  .filter((l) => l.kategori === "layanan")
-                  .map((layanan) => {
-                    const qty = qtyMap[layanan.id] ?? 0;
-                    return (
-                      <div
-                        key={layanan.id}
-                        className="flex items-center justify-between bg-gray-50 rounded-[20px] px-4 py-2.5"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-gray-900 block">
-                            {layanan.nama}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            Rp {layanan.harga.toLocaleString("id-ID")}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => changeQty(layanan.id, -1)}
-                            className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-700"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-4 text-center text-sm font-bold text-gray-900">
-                            {qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => changeQty(layanan.id, 1)}
-                            className="w-7 h-7 rounded-full bg-black flex items-center justify-center text-white"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-
-              {/* Section Produk */}
-              <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
-                Produk
-              </label>
-              <div className="flex flex-col gap-2 mb-4">
-                {layananList
-                  .filter((l) => l.kategori === "produk")
-                  .map((produk) => {
-                    const qty = qtyMap[produk.id] ?? 0;
-                    return (
-                      <div
-                        key={produk.id}
-                        className="flex items-center justify-between bg-gray-50 rounded-[20px] px-4 py-2.5"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-gray-900 block">
-                            {produk.nama}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            Rp {produk.harga.toLocaleString("id-ID")}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => changeQty(produk.id, -1)}
-                            className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-700"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-4 text-center text-sm font-bold text-gray-900">
-                            {qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => changeQty(produk.id, 1)}
-                            className="w-7 h-7 rounded-full bg-black flex items-center justify-center text-white"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                {layananList.filter((l) => l.kategori === "produk").length ===
-                  0 && (
-                  <p className="text-xs text-gray-400 text-center py-3">
-                    Belum ada produk
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-3 border-t border-gray-100 mb-5 px-1">
-              <span className="block text-[13px] font-bold text-gray-900 mb-1.5">
-                Total Transaksi
-              </span>
-              <div className="flex items-start gap-0.5">
-                <span className="text-[10px] font-bold text-[#16A34A]">Rp</span>
-                <span className="text-lg font-bold text-[#16A34A] leading-none">
-                  {totalTransaksi.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleConfirmTransaksi}
-              disabled={saving}
-              className="w-full py-3.5 rounded-[20px] bg-[#3138E8] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform"
-            >
-              {saving ? "Menyimpan..." : "Simpan Transaksi"}
-            </button>
           </div>
         </div>
       )}
@@ -819,87 +837,95 @@ export default function TransaksiPage() {
                 : "translateY(100%)",
               transition: isDragging ? "none" : "transform 0.3s ease-out",
             }}
-            className="w-full max-w-[425px] bg-white rounded-t-[32px] px-6 pt-3 pb-8 select-none"
+            className="w-full max-w-[425px] bg-white rounded-t-[32px] max-h-[85vh] flex flex-col overflow-hidden select-none"
           >
-            {/* Grab Bar / Drag Handle */}
-            <div
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={() => handleTouchEnd(closeModalPengeluaranHandler)}
-              className="w-full pt-1 pb-4 flex justify-center items-center cursor-grab active:cursor-grabbing touch-none"
-            >
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-            </div>
-
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-base font-bold text-[#111111]">
-                Tambah Pengeluaran
-              </h3>
-              <button
-                onClick={closeModalPengeluaranHandler}
-                className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"
+            {/* Header Modal (Fixed / Sticky - Garis Penarik + Title) */}
+            <div className="shrink-0 px-6 pt-3 pb-2 bg-white border-b border-gray-100">
+              <div
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={() => handleTouchEnd(closeModalPengeluaranHandler)}
+                className="w-full pt-1 pb-3 flex justify-center items-center cursor-grab active:cursor-grabbing touch-none"
               >
-                <X size={16} />
-              </button>
+                <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+              </div>
+
+              <div className="flex justify-between items-center pb-1">
+                <h3 className="text-base font-bold text-[#111111]">
+                  Tambah Pengeluaran
+                </h3>
+                <button
+                  onClick={closeModalPengeluaranHandler}
+                  className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-gray-600 mb-1.5">
-                Keterangan
-              </label>
-              <input
-                type="text"
-                value={keterangan}
-                onChange={(e) => setKeterangan(e.target.value)}
-                placeholder="Misal: Ganti Cermin"
-                className="w-full h-11 rounded-[16px] bg-gray-100 px-4 text-xs font-semibold text-gray-800 outline-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div>
+            {/* Scrollable Body Modal */}
+            <div
+              ref={modalPengeluaranRef}
+              className="px-6 pt-4 pb-8 overflow-y-auto flex-1"
+            >
+              <div className="mb-4">
                 <label className="block text-xs font-bold text-gray-600 mb-1.5">
-                  Nominal
+                  Keterangan
                 </label>
-                <div className="relative flex items-[#111111] items-center">
-                  <span className="absolute left-4 text-xs font-bold text-gray-400">
-                    Rp
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={nominal}
-                    onChange={(e) => setNominal(formatRupiah(e.target.value))}
-                    placeholder="0"
-                    className="w-full h-11 rounded-[16px] bg-gray-100 pl-11 pr-4 text-xs font-semibold text-gray-800 outline-none"
-                  />
+                <input
+                  type="text"
+                  value={keterangan}
+                  onChange={(e) => setKeterangan(e.target.value)}
+                  placeholder="Misal: Ganti Cermin"
+                  className="w-full h-11 rounded-[16px] bg-gray-100 px-4 text-xs font-semibold text-gray-800 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5">
+                    Nominal
+                  </label>
+                  <div className="relative flex items-[#111111] items-center">
+                    <span className="absolute left-4 text-xs font-bold text-gray-400">
+                      Rp
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={nominal}
+                      onChange={(e) => setNominal(formatRupiah(e.target.value))}
+                      placeholder="0"
+                      className="w-full h-11 rounded-[16px] bg-gray-100 pl-11 pr-4 text-xs font-semibold text-gray-800 outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5">
+                    Kategori
+                  </label>
+                  <select
+                    value={kategori}
+                    onChange={(e) =>
+                      setKategori(e.target.value as "rutin" | "insidental")
+                    }
+                    className="w-full h-11 rounded-[16px] bg-gray-100 px-4 text-xs font-semibold text-gray-800 outline-none"
+                  >
+                    <option value="rutin">Rutin</option>
+                    <option value="insidental">Insidental</option>
+                  </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5">
-                  Kategori
-                </label>
-                <select
-                  value={kategori}
-                  onChange={(e) =>
-                    setKategori(e.target.value as "rutin" | "insidental")
-                  }
-                  className="w-full h-11 rounded-[16px] bg-gray-100 px-4 text-xs font-semibold text-gray-800 outline-none"
-                >
-                  <option value="rutin">Rutin</option>
-                  <option value="insidental">Insidental</option>
-                </select>
-              </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={handleConfirmPengeluaran}
-              disabled={saving}
-              className="w-full py-3.5 rounded-[20px] bg-[#DC2626] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform"
-            >
-              {saving ? "Menyimpan..." : "Simpan Pengeluaran"}
-            </button>
+              <button
+                type="button"
+                onClick={handleConfirmPengeluaran}
+                disabled={saving}
+                className="w-full py-3.5 rounded-[20px] bg-[#DC2626] text-white font-bold text-xs disabled:opacity-50 active:scale-98 transition-transform"
+              >
+                {saving ? "Menyimpan..." : "Simpan Pengeluaran"}
+              </button>
+            </div>
           </div>
         </div>
       )}

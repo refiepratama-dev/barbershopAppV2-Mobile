@@ -364,49 +364,54 @@ export default function LaporanPage() {
   // ===== VIEW: LIST =====
   return (
     <div className="w-full font-sans pb-32 text-black">
-      <div className="bg-white rounded-[30px] p-5 shadow-sm border border-gray-100">
-        <h2 className="text-sm font-bold text-[#494949] mb-2">
+      {/* Outer Card */}
+      <div className="bg-white rounded-[30px] p-3 border border-gray-100">
+        {/* Header di Luar Inner Card */}
+        <h2 className="px-2 pb-2 text-sm font-bold text-[#494949]">
           Riwayat Laporan
         </h2>
 
-        {loading && (
-          <p className="text-center text-gray-400 text-xs py-12 font-medium">
-            Memuat data...
-          </p>
-        )}
+        {/* Inner Card (Samakan min-h agar tinggi card konsisten saat kosong) */}
+        <div className="rounded-[20px] bg-slate-100 p-3 min-h-[380px] shadow">
+          {loading && (
+            <p className="text-center text-gray-400 text-xs py-12 font-medium">
+              Memuat data...
+            </p>
+          )}
 
-        {!loading && shiftList.length === 0 && (
-          <p className="text-center text-gray-400 text-xs py-12 font-medium">
-            Belum ada laporan.
-          </p>
-        )}
+          {!loading && shiftList.length === 0 && (
+            <p className="text-center text-gray-400 text-xs py-12 font-medium">
+              Belum ada laporan.
+            </p>
+          )}
 
-        {!loading && shiftList.length > 0 && (
-          <div className="flex flex-col">
-            {shiftList.map((shift) => (
-              <button
-                key={shift.id}
-                onClick={() => openDetail(shift)}
-                className="w-full flex items-center justify-between py-3.5 border-b border-gray-100 last:border-none text-left active:bg-gray-50/50 transition-colors"
-              >
-                <div>
-                  <span className="text-[13px] font-medium text-black block mb-0.5">
-                    {formatTanggal(shift.tanggal)}
-                  </span>
-                  <span className="text-[11px] text-emerald-600 font-semibold">
-                    Rp {shift.omzet.toLocaleString("id-ID")}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 bg-black px-3 py-1.5 rounded-[30px]">
-                  <span className="text-[11px] text-white font-semibold tracking-wider">
-                    Ditutup
-                  </span>
-                  <ChevronRight size={16} className="text-white/60" />
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+          {!loading && shiftList.length > 0 && (
+            <div className="flex flex-col divide-y divide-gray-200/60">
+              {shiftList.map((shift) => (
+                <button
+                  key={shift.id}
+                  onClick={() => openDetail(shift)}
+                  className="w-full flex items-center justify-between py-3 text-left active:bg-gray-200/50 transition-colors"
+                >
+                  <div>
+                    <span className="text-[13px] font-medium text-black block mb-0.5">
+                      {formatTanggal(shift.tanggal)}
+                    </span>
+                    <span className="text-[11px] text-emerald-600 font-semibold">
+                      Rp {shift.omzet.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-black px-3 py-1.5 rounded-[30px]">
+                    <span className="text-[11px] text-white font-semibold tracking-wider">
+                      Ditutup
+                    </span>
+                    <ChevronRight size={16} className="text-white/60" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
