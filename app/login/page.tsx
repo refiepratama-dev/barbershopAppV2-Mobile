@@ -61,7 +61,7 @@ export default function LoginPage() {
       <section className="w-full max-w-[380px]">
         {/* Header */}
         <div className="text-center pb-4">
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-center">
             <img
               src="/logo.svg"
               alt="Logo Rafel Pangkas Rambut"
@@ -91,7 +91,6 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Masukan email anda"
-              autoFocus
               autoComplete="email"
               className="w-full h-11 rounded-[16px] bg-white px-4 text-sm text-black"
             />
@@ -130,7 +129,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 mt-2 rounded-full bg-black text-white font-bold text-sm disabled:opacity-50 active:scale-[0.98] transition-all shadow-sm"
+            className="w-full py-3.5 mt-2 rounded-full bg-[#3138E8] text-white font-bold text-sm disabled:opacity-50 active:scale-[0.98] transition-all shadow-sm"
           >
             {loading ? "Logging In..." : "Masuk"}
           </button>
