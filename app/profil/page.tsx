@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { LogOut, ChevronRight, Store, X, Check } from "lucide-react";
+import { LogOut, ChevronRight, Store, X, Check, User } from "lucide-react";
 
 type ShiftStatus = "belum_dibuka" | "buka" | "tutup_sementara" | "tutup";
 type Barber = { id: string; nama: string; status_aktif: boolean };
@@ -171,22 +171,25 @@ export default function ProfilPage() {
         <h2 className="px-2 pb-1 text-sm font-semibold text-[#494949]">
           Profil
         </h2>
-        <div className="rounded-[20px] bg-slate-100 p-4 flex items-center gap-4 shadow">
-          <div className="w-12 h-12 rounded-full bg-white text-gray-800 flex items-center justify-center shrink-0 font-bold text-base shadow-sm">
-            {kasir.nama
-              ? kasir.nama
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-              : "-"}
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-gray-800 block">
-              {kasir.nama || "Memuat..."}
-            </h3>
-            <p className="text-xs text-gray-500 font-medium mt-0.5 capitalize">
-              {kasir.role || "-"}
-            </p>
+
+        <div className="rounded-[20px] bg-slate-100 p-3 flex flex-col gap-2 shadow">
+          <div className="w-full bg-white rounded-[16px] p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 font-bold text-xs">
+              {kasir.nama
+                ? kasir.nama
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                : "-"}
+            </div>
+            <div>
+              <span className="text-[13px] font-semibold text-gray-800 block">
+                {kasir.nama || "Memuat..."}
+              </span>
+              <span className="text-[10px] text-gray-400 block mt-0.5 capitalize">
+                {kasir.role || "-"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
